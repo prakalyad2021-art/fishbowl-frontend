@@ -251,7 +251,35 @@ The application leverages AWS cloud services to provide scalable, serverless inf
 
 ## Architecture
 
-### System Architecture
+### System Architecture Diagram
+
+**Professional PlantUML diagrams are available in the repository:**
+
+1. **`architecture_detailed.puml`** - **RECOMMENDED FOR REPORT**
+   - Comprehensive system architecture
+   - Numbered data flow sequences (1-44)
+   - All 10 AWS services
+   - Real-time subscription flows
+   - Authentication sequences
+   - Media upload flows
+   - Scheduled task flows
+
+2. **`architecture.puml`** - High-level overview
+   - Service relationships
+   - Component grouping
+   - Data flow annotations
+
+3. **`architecture_deployment.puml`** - AWS deployment view
+   - Official AWS service icons
+   - Deployment topology
+   - Service connections
+
+**How to Generate Diagrams:**
+1. Copy code from `.puml` files
+2. Paste at http://www.plantuml.com/plantuml/uml/
+3. Export as PNG/SVG for report
+
+**Text Representation:**
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
