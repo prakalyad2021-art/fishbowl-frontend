@@ -9,6 +9,7 @@ specifies that any user authenticated via Cognito can "create", "read",
 const schema = a.schema({
   User: a
     .model({
+      userId: a.id().required(), // Cognito user ID
       username: a.string().required(),
       email: a.string().required(),
       fishEmoji: a.string(),
@@ -17,7 +18,7 @@ const schema = a.schema({
       lastSeen: a.datetime(),
     })
     .authorization((allow: any) => [
-      allow.authenticated().to(['read', 'update']),
+      allow.authenticated().to(['read', 'create', 'update']),
       allow.owner().to(['read', 'update', 'delete']),
     ]),
 

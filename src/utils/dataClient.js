@@ -7,23 +7,29 @@ export const dataHelpers = {
   // User operations
   async createOrUpdateUser(userId, userData) {
     try {
+      // First try to find by userId
       const existing = await client.models.User.list({
-        filter: { email: { eq: userData.email } },
+        filter: { userId: { eq: userId } },
       });
       
       if (existing.data.length > 0) {
-        return await client.models.User.update({
+        const updated = await client.models.User.update({
           id: existing.data[0].id,
+          userId: userId,
           ...userData,
           isOnline: true,
           lastSeen: new Date().toISOString(),
         });
+        return updated;
       } else {
-        return await client.models.User.create({
+        // Create new user with userId
+        const created = await client.models.User.create({
+          userId: userId,
           ...userData,
           isOnline: true,
           lastSeen: new Date().toISOString(),
         });
+        return created;
       }
     } catch (error) {
       console.error('Error creating/updating user:', error);
@@ -36,7 +42,7 @@ export const dataHelpers = {
       const users = await client.models.User.list({
         filter: { isOnline: { eq: true } },
       });
-      return users.data;
+      return users.data || [];
     } catch (error) {
       console.error('Error fetching online users:', error);
       return [];

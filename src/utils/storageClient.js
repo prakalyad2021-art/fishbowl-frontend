@@ -3,26 +3,28 @@ import { uploadData, getUrl, remove } from 'aws-amplify/storage';
 export const storageHelpers = {
   async uploadMedia(file, userId, mediaType) {
     try {
-      const fileName = `${userId}/${Date.now()}_${file.name}`;
+      const fileName = `${Date.now()}_${file.name}`;
+      const path = `media/${userId}/${fileName}`;
+      
       const result = await uploadData({
-        key: `media/${fileName}`,
+        key: path,
         data: file,
         options: {
           contentType: file.type,
         },
       }).result;
 
-      // Get the public URL
+      // Get the public URL - use longer expiration for posts
       const url = await getUrl({
-        key: `media/${fileName}`,
+        key: path,
         options: {
-          expiresIn: 3600, // 1 hour
+          expiresIn: 31536000, // 1 year for posts
         },
       });
 
       return {
         url: url.url.toString(),
-        key: `media/${fileName}`,
+        key: path,
         type: mediaType,
       };
     } catch (error) {

@@ -19,19 +19,36 @@ export default function Fishbowl({ user }) {
       try {
         const authUser = await getCurrentUser();
         const userId = authUser.userId;
-        const username = user?.username || authUser.signInDetails?.loginId || "user";
-        const email = user?.attributes?.email || "";
+        const username = user?.username || authUser.signInDetails?.loginId || authUser.username || "user";
+        const email = user?.attributes?.email || authUser.signInDetails?.loginId || "";
+        
+        // Get or assign fish emoji
+        const existingUser = await client.models.User.list({
+          filter: { userId: { eq: userId } },
+        });
+        
+        let fishEmoji = fishEmojis[Math.floor(Math.random() * fishEmojis.length)];
+        if (existingUser.data.length > 0 && existingUser.data[0].fishEmoji) {
+          fishEmoji = existingUser.data[0].fishEmoji;
+        }
 
         // Create or update user profile
-        await dataHelpers.createOrUpdateUser(userId, {
+        const userResult = await dataHelpers.createOrUpdateUser(userId, {
           username,
           email,
-          fishEmoji: fishEmojis[Math.floor(Math.random() * fishEmojis.length)],
+          fishEmoji,
           mood: myMood,
           isOnline: true,
         });
 
-        setCurrentUser({ id: userId, username, email });
+        const userData = userResult?.data || userResult;
+        setCurrentUser({ 
+          id: userId, 
+          userId: userId, // Add userId field for consistency
+          username, 
+          email,
+          fishEmoji: userData?.fishEmoji || fishEmoji
+        });
         await loadData();
         setLoading(false);
       } catch (error) {
@@ -45,25 +62,35 @@ export default function Fishbowl({ user }) {
     }
 
     // Set up real-time subscription for users
-    const subscription = client.models.User.observeQuery().subscribe({
-      next: (data) => {
-        const online = data.items.filter((u) => u.isOnline);
-        setOnlineUsers(online);
-        
-        // Update fish positions based on online users
-        const positions = online.map((_, i) => ({
-          x: Math.random() * 80 + 10,
-          y: Math.random() * 60 + 20,
-          drift: Math.random() * 2 - 1,
-          direction: Math.random() > 0.5 ? 1 : -1,
-          userId: online[i]?.id,
-          username: online[i]?.username,
-          fishEmoji: online[i]?.fishEmoji || fishEmojis[i % fishEmojis.length],
-          mood: online[i]?.mood || "(・∀・)",
-        }));
-        setFishPositions(positions);
-      },
-    });
+    let subscription;
+    if (user) {
+      subscription = client.models.User.observeQuery().subscribe({
+        next: (data) => {
+          const online = data.items.filter((u) => u.isOnline === true);
+          setOnlineUsers(online);
+          
+          // Update fish positions based on online users
+          const positions = online.map((user, i) => {
+            // Reuse existing position if fish already exists
+            const existing = fishPositions.find(f => (f.userId === (user?.userId || user?.id)));
+            return {
+              x: existing?.x || Math.random() * 80 + 10,
+              y: existing?.y || Math.random() * 60 + 20,
+              drift: existing?.drift || Math.random() * 2 - 1,
+              direction: existing?.direction || (Math.random() > 0.5 ? 1 : -1),
+              userId: user?.userId || user?.id,
+              username: user?.username,
+              fishEmoji: user?.fishEmoji || fishEmojis[i % fishEmojis.length],
+              mood: user?.mood || "(・∀・)",
+            };
+          });
+          setFishPositions(positions);
+        },
+        error: (err) => {
+          console.error("Subscription error:", err);
+        }
+      });
+    }
 
     // Set up real-time subscription for moods
     const moodSubscription = client.models.Mood.observeQuery().subscribe({
@@ -77,15 +104,42 @@ export default function Fishbowl({ user }) {
     });
 
     return () => {
-      subscription.unsubscribe();
-      moodSubscription.unsubscribe();
+      if (subscription) subscription.unsubscribe();
+      if (moodSubscription) moodSubscription.unsubscribe();
     };
   }, [user]);
 
   const loadData = async () => {
     try {
       const users = await dataHelpers.getOnlineUsers();
-      setOnlineUsers(users);
+      setOnlineUsers(users || []);
+      
+      // Also set fish positions from loaded users (including current user)
+      if (users && users.length > 0) {
+        const positions = users.map((user, i) => ({
+          x: Math.random() * 80 + 10,
+          y: Math.random() * 60 + 20,
+          drift: Math.random() * 2 - 1,
+          direction: Math.random() > 0.5 ? 1 : -1,
+          userId: user?.userId || user?.id,
+          username: user?.username,
+          fishEmoji: user?.fishEmoji || fishEmojis[i % fishEmojis.length],
+          mood: user?.mood || "(・∀・)",
+        }));
+        setFishPositions(positions);
+      } else if (currentUser && currentUser.fishEmoji) {
+        // If no other users, at least show current user
+        setFishPositions([{
+          x: 50,
+          y: 50,
+          drift: 0.5,
+          direction: 1,
+          userId: currentUser.id || currentUser.userId,
+          username: currentUser.username,
+          fishEmoji: currentUser.fishEmoji,
+          mood: myMood,
+        }]);
+      }
 
       const moods = await dataHelpers.getRecentMoods();
       const moodMap = {};
@@ -214,32 +268,38 @@ export default function Fishbowl({ user }) {
           ))}
 
           {/* Floating fish with thought bubbles - only show active users */}
-          {fishPositions
-            .filter((fish) => fish.userId) // Only show users with IDs
-            .map((fish, i) => (
-              <div
-                key={fish.userId || i}
-                className="absolute transition-all duration-500 ease-in-out flex flex-col items-center"
-                style={{
-                  left: `${fish.x}%`,
-                  top: `${fish.y}%`,
-                }}
-              >
-                <span
-                  className="text-sm mb-1 px-2 py-1 rounded-full bg-white/70 backdrop-blur-sm shadow"
-                  style={{ fontSize: "0.85rem" }}
+          {fishPositions.length > 0 ? (
+            fishPositions
+              .filter((fish) => fish.userId) // Only show users with IDs
+              .map((fish, i) => (
+                <div
+                  key={fish.userId || `fish-${i}`}
+                  className="absolute transition-all duration-500 ease-in-out flex flex-col items-center z-10"
+                  style={{
+                    left: `${fish.x}%`,
+                    top: `${fish.y}%`,
+                  }}
                 >
-                  {userMoods[fish.userId] || fish.mood || "(・∀・)"}
-                </span>
-                <span
-                  className="text-4xl cursor-pointer hover:scale-110 transition"
-                  style={{ filter: "drop-shadow(0 0 6px rgba(255,255,150,0.8))" }}
-                  title={`@${fish.username}`}
-                >
-                  {fish.fishEmoji}
-                </span>
-              </div>
-            ))}
+                  <span
+                    className="text-xs mb-1 px-2 py-1 rounded-full bg-white/80 backdrop-blur-sm shadow-md whitespace-nowrap"
+                    style={{ fontSize: "0.75rem" }}
+                  >
+                    {userMoods[fish.userId] || fish.mood || "(・∀・)"}
+                  </span>
+                  <span
+                    className="text-5xl cursor-pointer hover:scale-110 transition-transform"
+                    style={{ filter: "drop-shadow(0 0 8px rgba(255,255,150,0.9))" }}
+                    title={`@${fish.username || 'user'}`}
+                  >
+                    {fish.fishEmoji || "🐠"}
+                  </span>
+                </div>
+              ))
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+              <p className="text-lg">No fish swimming yet... 🐠</p>
+            </div>
+          )}
         </div>
 
         {/* Right panels */}
@@ -304,23 +364,26 @@ export default function Fishbowl({ user }) {
                   No friends online yet. Invite them to join! 🐠
                 </p>
               ) : (
-                onlineUsers.map((friend) => (
-                  <div
-                    key={friend.id}
-                    className="flex items-center gap-3 p-2 rounded-xl"
-                  >
-                    <span className="text-2xl">{friend.fishEmoji || "🐠"}</span>
-                    <div className="flex-1">
-                      <span className="font-medium">@{friend.username}</span>
-                      {userMoods[friend.id] && (
-                        <p className="text-xs text-gray-600">
-                          {userMoods[friend.id]}
-                        </p>
-                      )}
+                onlineUsers.map((friend) => {
+                  const friendId = friend.userId || friend.id;
+                  return (
+                    <div
+                      key={friendId || friend.id}
+                      className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/50 transition"
+                    >
+                      <span className="text-2xl">{friend.fishEmoji || "🐠"}</span>
+                      <div className="flex-1">
+                        <span className="font-medium">@{friend.username || "user"}</span>
+                        {(userMoods[friendId] || friend.mood) && (
+                          <p className="text-xs text-gray-600">
+                            {userMoods[friendId] || friend.mood}
+                          </p>
+                        )}
+                      </div>
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                     </div>
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  </div>
-                ))
+                  );
+                })
               )}
               {/* Show inactive friends (greyed out) */}
               {inactiveUsers.length > 0 && (
