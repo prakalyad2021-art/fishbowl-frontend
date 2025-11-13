@@ -21,9 +21,19 @@ export default function Chatroom({ user }) {
       try {
         const authUser = await getCurrentUser();
         const userId = authUser.userId;
-        const username = user?.username || authUser.signInDetails?.loginId || "user";
+        const email = user?.attributes?.email || authUser.signInDetails?.loginId || "";
+        const username = email ? email.split('@')[0] : (user?.username || authUser.username || "user");
         
-        setCurrentUser({ id: userId, username });
+        // Get user's fish emoji from User model
+        const existingUser = await client.models.User.list({
+          filter: { userId: { eq: userId } },
+        });
+        let fishEmoji = fishEmojis[Math.floor(Math.random() * fishEmojis.length)];
+        if (existingUser.data.length > 0 && existingUser.data[0].fishEmoji) {
+          fishEmoji = existingUser.data[0].fishEmoji;
+        }
+        
+        setCurrentUser({ id: userId, username, fishEmoji });
         await loadMessages();
       } catch (error) {
         console.error("Error initializing user:", error);
@@ -115,7 +125,7 @@ export default function Chatroom({ user }) {
         content: newMessage || (mediaFile ? "📎 Media" : ""),
         senderId: currentUser.id,
         senderUsername: currentUser.username,
-        senderFishEmoji: fishEmojis[Math.floor(Math.random() * fishEmojis.length)],
+        senderFishEmoji: currentUser.fishEmoji || fishEmojis[0],
         mediaUrl,
         mediaType,
       });

@@ -20,7 +20,9 @@ export default function Calendar({ user }) {
     const init = async () => {
       try {
         const authUser = await getCurrentUser();
-        setCurrentUser({ id: authUser.userId, username: user?.username || "user" });
+        const email = user?.attributes?.email || authUser.signInDetails?.loginId || "";
+        const username = email ? email.split('@')[0] : (user?.username || "user");
+        setCurrentUser({ id: authUser.userId, username });
         await loadEvents();
         await loadUsers();
       } catch (error) {
@@ -90,11 +92,15 @@ export default function Calendar({ user }) {
   };
 
   const toggleTagUser = (userId) => {
+    // Use userId from User model (not the DynamoDB id)
+    const userToTag = allUsers.find(u => u.id === userId);
+    const tagId = userToTag?.userId || userId; // Use userId field if available, fallback to id
+    
     setNewEvent({
       ...newEvent,
-      taggedUsers: newEvent.taggedUsers.includes(userId)
-        ? newEvent.taggedUsers.filter((id) => id !== userId)
-        : [...newEvent.taggedUsers, userId],
+      taggedUsers: newEvent.taggedUsers.includes(tagId)
+        ? newEvent.taggedUsers.filter((id) => id !== tagId)
+        : [...newEvent.taggedUsers, tagId],
     });
   };
 

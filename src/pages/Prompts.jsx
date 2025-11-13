@@ -14,7 +14,9 @@ export default function Prompts({ user }) {
     const init = async () => {
       try {
         const authUser = await getCurrentUser();
-        setCurrentUser({ id: authUser.userId, username: user?.username || "user" });
+        const email = user?.attributes?.email || authUser.signInDetails?.loginId || "";
+        const username = email ? email.split('@')[0] : (user?.username || "user");
+        setCurrentUser({ id: authUser.userId, username });
         await loadTodayPrompt();
       } catch (error) {
         console.error("Error:", error);

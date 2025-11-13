@@ -25,10 +25,22 @@ export default function Media({ user }) {
     const init = async () => {
       try {
         const authUser = await getCurrentUser();
+        const email = user?.attributes?.email || authUser.signInDetails?.loginId || "";
+        const username = email ? email.split('@')[0] : (user?.username || "user");
+        
+        // Get user's fish emoji from User model
+        const existingUser = await client.models.User.list({
+          filter: { userId: { eq: authUser.userId } },
+        });
+        let fishEmoji = fishEmojis[Math.floor(Math.random() * fishEmojis.length)];
+        if (existingUser.data.length > 0 && existingUser.data[0].fishEmoji) {
+          fishEmoji = existingUser.data[0].fishEmoji;
+        }
+        
         setCurrentUser({
           id: authUser.userId,
-          username: user?.username || "user",
-          fishEmoji: fishEmojis[Math.floor(Math.random() * fishEmojis.length)],
+          username,
+          fishEmoji,
         });
         await loadPosts();
       } catch (error) {

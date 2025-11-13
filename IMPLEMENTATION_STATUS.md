@@ -73,3 +73,4 @@ I'll implement the remaining pages:
 - Real-time features use AppSync subscriptions
 - Authorization: owner-based for private data, authenticated for shared
 
+

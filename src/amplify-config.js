@@ -4,3 +4,4 @@ export const amplifyConfig = {
   // Will be populated by Amplify Gen 2 backend
 };
 
+

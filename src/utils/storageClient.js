@@ -1,10 +1,16 @@
 import { uploadData, getUrl, remove } from 'aws-amplify/storage';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 export const storageHelpers = {
   async uploadMedia(file, userId, mediaType) {
     try {
+      // Get identity ID from auth session
+      const session = await fetchAuthSession();
+      const identityId = session.identityId || userId; // Fallback to userId if identityId not available
+      
       const fileName = `${Date.now()}_${file.name}`;
-      const path = `media/${userId}/${fileName}`;
+      // Use identity ID in path to match storage resource pattern: media/{entity_id}/*
+      const path = `media/${identityId}/${fileName}`;
       
       const result = await uploadData({
         key: path,
@@ -29,6 +35,7 @@ export const storageHelpers = {
       };
     } catch (error) {
       console.error('Error uploading media:', error);
+      console.error('Error details:', error.message, error.stack);
       throw error;
     }
   },
