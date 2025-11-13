@@ -1,94 +1,121 @@
 @startuml Fishbowl_Deployment_Architecture
 !theme aws-orange
 skinparam linetype ortho
+skinparam backgroundColor #F8F9FA
+skinparam defaultFontSize 10
+skinparam componentStyle rectangle
 
-title Fishbowl - AWS Deployment Architecture
+title Fishbowl Application - AWS Deployment Architecture\nService Topology & Connections
 
-!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v15.0/dist
-!includeurl AWSPuml/AWSCommon.puml
-!includeurl AWSPuml/ApplicationIntegration/AppSync.puml
-!includeurl AWSPuml/SecurityIdentityCompliance/Cognito.puml
-!includeurl AWSPuml/Database/DynamoDB.puml
-!includeurl AWSPuml/Storage/SimpleStorageServiceS3.puml
-!includeurl AWSPuml/Compute/Lambda.puml
-!includeurl AWSPuml/ApplicationIntegration/EventBridge.puml
-!includeurl AWSPuml/ManagementGovernance/CloudWatch.puml
-!includeurl AWSPuml/SecurityIdentityCompliance/IAM.puml
-!includeurl AWSPuml/FrontEndWebMobile/Amplify.puml
+' Define AWS Service Colors
+skinparam component {
+    BackgroundColor<<AWS>> #FF9900
+    BorderColor<<AWS>> #232F3E
+    FontColor<<AWS>> #FFFFFF
+    FontStyle<<AWS>> bold
+}
 
-left to right direction
+skinparam component {
+    BackgroundColor<<Frontend>> #4A90E2
+    BorderColor<<Frontend>> #2E5C8A
+    FontColor<<Frontend>> #FFFFFF
+}
 
-' Users
-actor "End Users\n(Browser)" as users
+skinparam component {
+    BackgroundColor<<Database>> #3F48CC
+    BorderColor<<Database>> #2E3A8A
+    FontColor<<Database>> #FFFFFF
+}
+
+skinparam component {
+    BackgroundColor<<Storage>> #569A31
+    BorderColor<<Storage>> #3D6B22
+    FontColor<<Storage>> #FFFFFF
+}
+
+' User
+actor "End User" as user
 
 ' Frontend
-Amplify(amplify, "AWS Amplify Hosting", "React App\nStatic Site\nCDN Distribution")
+rectangle "Frontend Application" <<Frontend>> {
+    rectangle "React App\n(Vite + React 19)" as ReactApp
+    rectangle "8 Page Modules" as Pages
+    rectangle "Utilities\n(Data/Storage Clients)" as Utils
+}
 
-' Authentication
-Cognito(cognito, "Amazon Cognito", "User Pool + Identity Pool\nEmail Authentication")
+' AWS Services
+rectangle "AWS Amplify Platform" {
+    component [Amplify Hosting\nFrontend Hosting\nCI/CD Pipeline] as AmplifyHosting <<AWS>>
+    component [Amplify Console\nBuild Management\nBackend Config] as AmplifyConsole <<AWS>>
+}
 
-' API Layer
-AppSync(appsync, "AWS AppSync", "GraphQL API\nReal-time Subscriptions\nWebSocket")
+rectangle "Authentication & Authorization" {
+    component [Cognito User Pool\nSign-up/Sign-in] as CognitoUserPool <<AWS>>
+    component [Cognito Identity Pool\nAWS Credentials] as CognitoIdentityPool <<AWS>>
+    component [IAM Roles\nAccess Policies] as IAMRoles <<AWS>>
+}
 
-' Database
-DynamoDB(dynamodb, "Amazon DynamoDB", "10 Tables\nNoSQL Database\nAuto-scaling")
+rectangle "API & Data Layer" {
+    component [AppSync\nGraphQL API\nReal-time Subscriptions] as AppSyncAPI <<AWS>>
+    component [DynamoDB\n10 Tables\nNoSQL Database] as DynamoDB <<Database>>
+}
 
-' Storage
-SimpleStorageServiceS3(s3, "Amazon S3", "Media Storage\nfishbowlMedia Bucket\n5GB Free Tier")
+rectangle "Storage Layer" {
+    component [S3 Bucket\nMedia Storage\nfishbowlMedia] as S3Bucket <<Storage>>
+}
 
-' Compute
-Lambda(lambda, "AWS Lambda", "calendarReminder\nServerless Function\nNode.js Runtime")
+rectangle "Compute & Scheduling" {
+    component [Lambda Function\nCalendar Reminder\nServerless] as LambdaFunction <<AWS>>
+    component [EventBridge\nScheduler\nDaily 9 AM UTC] as EventBridge <<AWS>>
+}
 
-' Scheduling
-EventBridge(eventbridge, "Amazon EventBridge", "Scheduled Rules\nDaily 9 AM UTC\nCron Expression")
-
-' Monitoring
-CloudWatch(cloudwatch, "AWS CloudWatch", "Logs & Metrics\nApplication Monitoring\nError Tracking")
-
-' IAM
-IAM(iam, "AWS IAM", "Roles & Policies\nAccess Control\nSecurity")
+rectangle "Monitoring & Logging" {
+    component [CloudWatch\nLogs & Metrics\nService Monitoring] as CloudWatch <<AWS>>
+}
 
 ' Connections
-users --> amplify : HTTPS\nPort 443
-amplify --> cognito : Authentication\nOAuth 2.0
-amplify --> appsync : GraphQL\nMutations/Queries
-amplify --> appsync : WebSocket\nSubscriptions
-amplify --> s3 : Media Upload\nPutObject
-amplify --> s3 : Media Download\nGetObject
+user --> ReactApp : "HTTPS"
+ReactApp --> Pages
+ReactApp --> Utils
 
-cognito --> iam : Identity Credentials
-iam --> s3 : S3 Access Policy
-iam --> appsync : API Authorization
+ReactApp --> AmplifyHosting : "Deployed on"
+AmplifyHosting --> AmplifyConsole : "Managed by"
 
-appsync --> dynamodb : CRUD Operations\n10 Tables
-appsync --> cloudwatch : API Logs
+ReactApp --> CognitoUserPool : "1. Authenticate"
+CognitoUserPool --> CognitoIdentityPool : "2. Get Identity"
+CognitoIdentityPool --> IAMRoles : "3. Assume Role"
+IAMRoles --> AppSyncAPI : "4. Authorize API"
+IAMRoles --> S3Bucket : "4. Authorize Storage"
 
-eventbridge --> lambda : Scheduled Trigger\nDaily Invocation
-lambda --> appsync : Query Events\nGraphQL
-lambda --> dynamodb : Direct Query\n(Alternative)
-lambda --> cloudwatch : Function Logs
+Utils --> AppSyncAPI : "GraphQL\nQueries/Mutations"
+AppSyncAPI --> DynamoDB : "Data Operations"
+AppSyncAPI ..> ReactApp : "Real-time\nSubscriptions\n(WebSocket)"
 
-s3 --> cloudwatch : Access Logs
+Utils --> S3Bucket : "Upload Media"
+S3Bucket --> ReactApp : "Media URLs"
 
-note right of amplify
-  **Amplify Hosting:**
-  - Continuous Deployment
-  - GitHub Integration
-  - Auto-scaling CDN
-  - SSL/TLS Certificates
+EventBridge --> LambdaFunction : "Trigger\nDaily Schedule"
+LambdaFunction --> AppSyncAPI : "Query Events"
+LambdaFunction --> CloudWatch : "Logs"
+
+AppSyncAPI --> CloudWatch : "API Logs"
+S3Bucket --> CloudWatch : "Access Logs"
+CognitoUserPool --> CloudWatch : "Auth Logs"
+LambdaFunction --> CloudWatch : "Function Logs"
+
+' Data Flow Labels
+ReactApp -[hidden]right-> AppSyncAPI
+note right of AppSyncAPI
+  **Real-time Subscriptions:**
+  • User presence
+  • Messages
+  • Moods
+  • Posts/Comments
+  • Calendar events
 end note
 
-note right of appsync
-  **AppSync Features:**
-  - GraphQL API
-  - Real-time Subscriptions
-  - Automatic Resolvers
-  - Multi-auth Support
-  - Offline Sync
-end note
-
-note right of dynamodb
-  **DynamoDB Tables:**
+note right of DynamoDB
+  **10 DynamoDB Tables:**
   1. User
   2. Message
   3. Mood
@@ -101,29 +128,28 @@ note right of dynamodb
   10. UserStats
 end note
 
-note right of lambda
-  **Lambda Configuration:**
-  - Runtime: Node.js 18+
-  - Memory: 128 MB
-  - Timeout: 30s
-  - Handler: handler.ts
-  - Trigger: EventBridge
+note bottom of S3Bucket
+  **Storage Path:**
+  media/{identity_id}/*
+  
+  **File Types:**
+  Photos, Videos,
+  Audio, GIFs
+end note
+
+note left of LambdaFunction
+  **Scheduled Task:**
+  Runs daily at 9 AM UTC
+  Checks CalendarEvent table
+  Sends reminders to users
 end note
 
 legend right
-    |<#FFD700> **AWS Services Used** |
-    | 1. AWS Amplify Hosting |
-    | 2. Amazon Cognito |
-    | 3. AWS AppSync |
-    | 4. Amazon DynamoDB |
-    | 5. Amazon S3 |
-    | 6. AWS Lambda |
-    | 7. Amazon EventBridge |
-    | 8. AWS CloudWatch |
-    | 9. AWS IAM |
-    | 10. AWS Amplify Console |
-    
-    **All within Free Tier** ✅
+  |<#FF9900> AWS Service |
+  |<#4A90E2> Frontend |
+  |--| Data Flow |
+  |..| Real-time |
+  |==| Scheduled |
 endlegend
 
 @enduml
