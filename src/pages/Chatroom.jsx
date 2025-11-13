@@ -108,8 +108,14 @@ export default function Chatroom({ user }) {
   };
 
   const handleSend = async () => {
-    if (!newMessage.trim() && !mediaFile) return;
-    if (!currentUser) return;
+    if (!newMessage.trim() && !mediaFile) {
+      alert("Please enter a message or attach a file");
+      return;
+    }
+    if (!currentUser) {
+      alert("Please log in");
+      return;
+    }
 
     try {
       setUploading(true);
@@ -118,6 +124,7 @@ export default function Chatroom({ user }) {
 
       // Upload media if present
       if (mediaFile) {
+        console.log("Uploading media for chat...");
         const fileType = mediaFile.type;
         if (fileType.startsWith("video/")) mediaType = "video";
         else if (fileType.startsWith("audio/")) mediaType = "audio";
@@ -130,9 +137,11 @@ export default function Chatroom({ user }) {
           mediaType
         );
         mediaUrl = uploadResult.url;
+        console.log("Media uploaded:", mediaUrl);
       }
 
       // Send message
+      console.log("Sending message...", { content: newMessage, mediaUrl });
       await dataHelpers.sendMessage({
         content: newMessage || (mediaFile ? "📎 Media" : ""),
         senderId: currentUser.id,
@@ -141,13 +150,15 @@ export default function Chatroom({ user }) {
         mediaUrl,
         mediaType,
       });
+      console.log("Message sent successfully");
 
       setNewMessage("");
       setMediaFile(null);
       setMediaPreview(null);
     } catch (error) {
       console.error("Error sending message:", error);
-      alert("Failed to send message");
+      const errorMessage = error.message || error.toString() || "Unknown error";
+      alert(`Failed to send message: ${errorMessage}\n\nCheck console for details.`);
     } finally {
       setUploading(false);
     }

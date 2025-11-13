@@ -76,7 +76,19 @@ export default function Prompts({ user }) {
   };
 
   const submitResponse = async () => {
-    if (!myResponse.trim() || !prompt || !currentUser || submitting) return;
+    if (!myResponse.trim()) {
+      alert("Please enter a response");
+      return;
+    }
+    if (!prompt) {
+      alert("No prompt available");
+      return;
+    }
+    if (!currentUser) {
+      alert("Please log in");
+      return;
+    }
+    if (submitting) return;
 
     try {
       setSubmitting(true);
@@ -102,10 +114,12 @@ export default function Prompts({ user }) {
 
       setMyResponse("");
       await loadResponses(prompt.id);
+      alert("Response posted! 💭");
     } catch (error) {
       console.error("Error submitting response:", error);
       console.error("Error details:", error.message, error.errors);
-      alert(`Failed to submit response: ${error.message || 'Unknown error'}`);
+      const errorMessage = error.message || error.toString() || "Unknown error";
+      alert(`Failed to submit response: ${errorMessage}\n\nCheck console for details.`);
     } finally {
       setSubmitting(false);
     }

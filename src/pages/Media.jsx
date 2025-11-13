@@ -100,13 +100,21 @@ export default function Media({ user }) {
   };
 
   const uploadPost = async () => {
-    if (!mediaFile || !currentUser) return;
+    if (!mediaFile || !currentUser) {
+      alert("Please select a file to upload");
+      return;
+    }
 
     try {
       setUploading(true);
+      console.log("Starting upload...", { file: mediaFile.name, type: mediaType, user: currentUser.id });
+      
+      // Upload to S3
       const uploadResult = await storageHelpers.uploadMedia(mediaFile, currentUser.id, mediaType);
+      console.log("Upload successful:", uploadResult);
 
-      await client.models.MediaPost.create({
+      // Create post in database
+      const postResult = await client.models.MediaPost.create({
         userId: currentUser.id,
         username: currentUser.username,
         fishEmoji: currentUser.fishEmoji,
@@ -114,14 +122,21 @@ export default function Media({ user }) {
         mediaType,
         caption: caption || null,
       });
+      console.log("Post created:", postResult);
 
+      // Reset form
       setCaption("");
       setMediaFile(null);
       setShowUpload(false);
+      
+      // Reload posts
       await loadPosts();
+      
+      alert("Post shared successfully! 🎉");
     } catch (error) {
       console.error("Error uploading:", error);
-      alert("Failed to upload");
+      const errorMessage = error.message || error.toString() || "Unknown error";
+      alert(`Failed to upload: ${errorMessage}\n\nCheck console for details.`);
     } finally {
       setUploading(false);
     }

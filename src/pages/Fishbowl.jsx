@@ -215,9 +215,19 @@ export default function Fishbowl({ user }) {
 
   // Update mood
   const handleUpdateMood = async () => {
-    if (!currentUser || !myMood.trim()) return;
+    if (!currentUser) {
+      alert("Please log in");
+      return;
+    }
+    if (!myMood.trim()) {
+      alert("Please enter a mood");
+      return;
+    }
 
     try {
+      console.log("Updating mood...", { userId: currentUser.id, mood: myMood });
+      
+      // Create mood entry
       await dataHelpers.updateMood(
         currentUser.id,
         currentUser.username,
@@ -225,7 +235,7 @@ export default function Fishbowl({ user }) {
         myMood
       );
 
-      // Update user's current mood
+      // Update user's current mood in User model
       await dataHelpers.createOrUpdateUser(currentUser.id, {
         username: currentUser.username,
         email: currentUser.email,
@@ -233,10 +243,12 @@ export default function Fishbowl({ user }) {
         isOnline: true,
       });
 
-      alert("Mood updated! 🐠");
+      console.log("Mood updated successfully");
+      alert("Mood updated! 💭 Your thought bubble will appear above your fish!");
     } catch (error) {
       console.error("Error updating mood:", error);
-      alert("Failed to update mood");
+      const errorMessage = error.message || error.toString() || "Unknown error";
+      alert(`Failed to update mood: ${errorMessage}\n\nCheck console for details.`);
     }
   };
 
