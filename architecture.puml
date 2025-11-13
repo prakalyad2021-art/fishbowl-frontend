@@ -1,0 +1,186 @@
+@startuml Fishbowl_System_Architecture
+!theme aws-orange
+skinparam linetype ortho
+skinparam componentStyle rectangle
+
+title Fishbowl Social Media Application - System Architecture
+
+' Define colors
+skinparam component {
+    BackgroundColor<<Frontend>> #E8F4F8
+    BackgroundColor<<Auth>> #FFD700
+    BackgroundColor<<API>> #FF6B6B
+    BackgroundColor<<Database>> #4ECDC4
+    BackgroundColor<<Storage>> #95E1D3
+    BackgroundColor<<Compute>> #F38181
+    BackgroundColor<<Scheduler>> #AA96DA
+    BackgroundColor<<Monitoring>> #FCBAD3
+    BackgroundColor<<Infra>> #C7CEEA
+}
+
+' User Layer
+rectangle "Users" as users #FFE5E5
+
+' Frontend Layer
+package "Frontend Layer" <<Frontend>> {
+    component [React 19 Application\nVite Build] as frontend
+    component [Tailwind CSS v4\nStyling] as styling
+    component [Framer Motion\nAnimations] as animations
+    component [React Router 7\nNavigation] as router
+}
+
+' Hosting Layer
+package "Hosting & CI/CD" <<Infra>> {
+    component [AWS Amplify Hosting\nStatic Site Hosting] as hosting
+    component [AWS Amplify Console\nCI/CD Pipeline] as cicd
+    component [GitHub Repository\nSource Control] as github
+}
+
+' Authentication Layer
+package "Authentication Layer" <<Auth>> {
+    component [Amazon Cognito\nUser Pool] as userpool
+    component [Amazon Cognito\nIdentity Pool] as identitypool
+    component [AWS IAM\nRoles & Policies] as iam
+}
+
+' API Layer
+package "API & Data Layer" <<API>> {
+    component [AWS AppSync\nGraphQL API] as appsync
+    component [Real-time Subscriptions\nWebSocket] as subscriptions
+    component [GraphQL Schema\n10 Models] as schema
+}
+
+' Database Layer
+package "Database Layer" <<Database>> {
+    database "DynamoDB\nUser Table" as userdb
+    database "DynamoDB\nMessage Table" as msgdb
+    database "DynamoDB\nMood Table" as mooddb
+    database "DynamoDB\nPrompt Table" as promptdb
+    database "DynamoDB\nMediaPost Table" as mediadb
+    database "DynamoDB\nJournalEntry Table" as journaldb
+    database "DynamoDB\nCalendarEvent Table" as calendardb
+    database "DynamoDB\nUserStats Table" as statsdb
+    database "DynamoDB\nOther Tables" as otherdb
+}
+
+' Storage Layer
+package "Storage Layer" <<Storage>> {
+    component [Amazon S3\nMedia Bucket] as s3
+    component [S3 Access Control\nIAM Policies] as s3access
+}
+
+' Compute Layer
+package "Compute Layer" <<Compute>> {
+    component [AWS Lambda\ncalendarReminder] as lambda
+    component [Lambda Handler\nEvent Processing] as handler
+}
+
+' Scheduling Layer
+package "Scheduling Layer" <<Scheduler>> {
+    component [Amazon EventBridge\nRules & Schedules] as eventbridge
+    component [Cron Schedule\nDaily 9 AM UTC] as cron
+}
+
+' Monitoring Layer
+package "Monitoring & Logging" <<Monitoring>> {
+    component [AWS CloudWatch\nLogs & Metrics] as cloudwatch
+    component [Error Tracking\nApplication Logs] as logs
+}
+
+' Connections - User to Frontend
+users --> frontend : HTTPS\nWeb Browser
+
+' Frontend Internal
+frontend --> styling
+frontend --> animations
+frontend --> router
+
+' Frontend to Hosting
+frontend --> hosting : Deployed\nStatic Assets
+github --> cicd : Push Events
+cicd --> hosting : Auto Deploy
+
+' Frontend to Auth
+frontend --> userpool : Sign Up/Sign In\nEmail Auth
+userpool --> identitypool : Identity Token
+identitypool --> iam : AWS Credentials
+
+' Frontend to API
+frontend --> appsync : GraphQL\nMutations & Queries
+frontend --> subscriptions : WebSocket\nReal-time Updates
+appsync --> schema : Schema Definition
+
+' API to Database
+appsync --> userdb : CRUD Operations
+appsync --> msgdb : CRUD Operations
+appsync --> mooddb : CRUD Operations
+appsync --> promptdb : CRUD Operations
+appsync --> mediadb : CRUD Operations
+appsync --> journaldb : CRUD Operations
+appsync --> calendardb : CRUD Operations
+appsync --> statsdb : CRUD Operations
+appsync --> otherdb : CRUD Operations
+
+' Frontend to Storage
+frontend --> s3 : Upload Media\n(PutObject)
+iam --> s3access : Access Control
+s3access --> s3 : Policy Enforcement
+frontend --> s3 : Get Media URLs\n(GetObject)
+
+' Scheduling to Compute
+eventbridge --> cron : Schedule Trigger
+cron --> lambda : Daily Invocation\n9 AM UTC
+lambda --> handler : Execute Function
+handler --> calendardb : Query Events\nCheck Reminders
+
+' Monitoring Connections
+lambda --> cloudwatch : Function Logs
+appsync --> cloudwatch : API Logs
+s3 --> cloudwatch : Access Logs
+cloudwatch --> logs : Aggregate Logs
+
+' Data Flow Annotations
+note right of frontend
+  **Frontend Features:**
+  - Fishbowl (Real-time presence)
+  - Chatroom (Real-time messages)
+  - Prompts (24h expiration)
+  - Media Feed (Instagram-style)
+  - Journal (Private entries)
+  - Calendar (Shared events)
+  - Stats (Visualization)
+end note
+
+note right of appsync
+  **GraphQL Operations:**
+  - Mutations (Create/Update/Delete)
+  - Queries (List/Get)
+  - Subscriptions (Real-time)
+  
+  **Models:**
+  User, Message, Mood, Prompt,
+  PromptResponse, MediaPost,
+  MediaComment, JournalEntry,
+  CalendarEvent, UserStats
+end note
+
+note right of s3
+  **Storage Structure:**
+  media/{identity_id}/filename
+  
+  **File Types:**
+  - Images (JPG, PNG, GIF)
+  - Videos (MP4, MOV)
+  - Audio (MP3, WAV)
+end note
+
+note right of lambda
+  **Function Purpose:**
+  - Daily calendar reminders
+  - Query events for today
+  - Send notifications to
+    tagged users
+end note
+
+@enduml
+

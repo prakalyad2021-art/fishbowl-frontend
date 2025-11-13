@@ -1,0 +1,130 @@
+@startuml Fishbowl_Deployment_Architecture
+!theme aws-orange
+skinparam linetype ortho
+
+title Fishbowl - AWS Deployment Architecture
+
+!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v15.0/dist
+!includeurl AWSPuml/AWSCommon.puml
+!includeurl AWSPuml/ApplicationIntegration/AppSync.puml
+!includeurl AWSPuml/SecurityIdentityCompliance/Cognito.puml
+!includeurl AWSPuml/Database/DynamoDB.puml
+!includeurl AWSPuml/Storage/SimpleStorageServiceS3.puml
+!includeurl AWSPuml/Compute/Lambda.puml
+!includeurl AWSPuml/ApplicationIntegration/EventBridge.puml
+!includeurl AWSPuml/ManagementGovernance/CloudWatch.puml
+!includeurl AWSPuml/SecurityIdentityCompliance/IAM.puml
+!includeurl AWSPuml/FrontEndWebMobile/Amplify.puml
+
+left to right direction
+
+' Users
+actor "End Users\n(Browser)" as users
+
+' Frontend
+Amplify(amplify, "AWS Amplify Hosting", "React App\nStatic Site\nCDN Distribution")
+
+' Authentication
+Cognito(cognito, "Amazon Cognito", "User Pool + Identity Pool\nEmail Authentication")
+
+' API Layer
+AppSync(appsync, "AWS AppSync", "GraphQL API\nReal-time Subscriptions\nWebSocket")
+
+' Database
+DynamoDB(dynamodb, "Amazon DynamoDB", "10 Tables\nNoSQL Database\nAuto-scaling")
+
+' Storage
+SimpleStorageServiceS3(s3, "Amazon S3", "Media Storage\nfishbowlMedia Bucket\n5GB Free Tier")
+
+' Compute
+Lambda(lambda, "AWS Lambda", "calendarReminder\nServerless Function\nNode.js Runtime")
+
+' Scheduling
+EventBridge(eventbridge, "Amazon EventBridge", "Scheduled Rules\nDaily 9 AM UTC\nCron Expression")
+
+' Monitoring
+CloudWatch(cloudwatch, "AWS CloudWatch", "Logs & Metrics\nApplication Monitoring\nError Tracking")
+
+' IAM
+IAM(iam, "AWS IAM", "Roles & Policies\nAccess Control\nSecurity")
+
+' Connections
+users --> amplify : HTTPS\nPort 443
+amplify --> cognito : Authentication\nOAuth 2.0
+amplify --> appsync : GraphQL\nMutations/Queries
+amplify --> appsync : WebSocket\nSubscriptions
+amplify --> s3 : Media Upload\nPutObject
+amplify --> s3 : Media Download\nGetObject
+
+cognito --> iam : Identity Credentials
+iam --> s3 : S3 Access Policy
+iam --> appsync : API Authorization
+
+appsync --> dynamodb : CRUD Operations\n10 Tables
+appsync --> cloudwatch : API Logs
+
+eventbridge --> lambda : Scheduled Trigger\nDaily Invocation
+lambda --> appsync : Query Events\nGraphQL
+lambda --> dynamodb : Direct Query\n(Alternative)
+lambda --> cloudwatch : Function Logs
+
+s3 --> cloudwatch : Access Logs
+
+note right of amplify
+  **Amplify Hosting:**
+  - Continuous Deployment
+  - GitHub Integration
+  - Auto-scaling CDN
+  - SSL/TLS Certificates
+end note
+
+note right of appsync
+  **AppSync Features:**
+  - GraphQL API
+  - Real-time Subscriptions
+  - Automatic Resolvers
+  - Multi-auth Support
+  - Offline Sync
+end note
+
+note right of dynamodb
+  **DynamoDB Tables:**
+  1. User
+  2. Message
+  3. Mood
+  4. Prompt
+  5. PromptResponse
+  6. MediaPost
+  7. MediaComment
+  8. JournalEntry
+  9. CalendarEvent
+  10. UserStats
+end note
+
+note right of lambda
+  **Lambda Configuration:**
+  - Runtime: Node.js 18+
+  - Memory: 128 MB
+  - Timeout: 30s
+  - Handler: handler.ts
+  - Trigger: EventBridge
+end note
+
+legend right
+    |<#FFD700> **AWS Services Used** |
+    | 1. AWS Amplify Hosting |
+    | 2. Amazon Cognito |
+    | 3. AWS AppSync |
+    | 4. Amazon DynamoDB |
+    | 5. Amazon S3 |
+    | 6. AWS Lambda |
+    | 7. Amazon EventBridge |
+    | 8. AWS CloudWatch |
+    | 9. AWS IAM |
+    | 10. AWS Amplify Console |
+    
+    **All within Free Tier** ✅
+endlegend
+
+@enduml
+
