@@ -23,32 +23,49 @@ export default function Fishbowl({ user }) {
         // Extract username from email (part before @)
         const username = email ? email.split('@')[0] : (user?.username || authUser.username || "user");
         
-        // Get or assign fish emoji
+        // Get or assign fish emoji - IMPORTANT: Only assign if user doesn't exist
         const existingUser = await client.models.User.list({
           filter: { userId: { eq: userId } },
         });
         
-        let fishEmoji = fishEmojis[Math.floor(Math.random() * fishEmojis.length)];
+        let fishEmoji;
+        let isNewUser = false;
+        
         if (existingUser.data.length > 0 && existingUser.data[0].fishEmoji) {
+          // User exists - use their existing fish emoji (NEVER change it)
           fishEmoji = existingUser.data[0].fishEmoji;
+        } else {
+          // New user - assign fish emoji ONCE and save it permanently
+          isNewUser = true;
+          fishEmoji = fishEmojis[Math.floor(Math.random() * fishEmojis.length)];
         }
 
         // Create or update user profile
-        const userResult = await dataHelpers.createOrUpdateUser(userId, {
+        // Only update fishEmoji if it's a new user
+        const userDataToSave = {
           username,
           email,
-          fishEmoji,
           mood: myMood,
           isOnline: true,
-        });
+        };
+        
+        // Only set fishEmoji if it's a new user (to prevent changing existing fish)
+        if (isNewUser) {
+          userDataToSave.fishEmoji = fishEmoji;
+        }
+
+        const userResult = await dataHelpers.createOrUpdateUser(userId, userDataToSave);
 
         const userData = userResult?.data || userResult;
+        // Always use the fishEmoji we determined (existing or new)
+        const finalFishEmoji = userData?.fishEmoji || fishEmoji;
+        
         setCurrentUser({ 
           id: userId, 
           userId: userId, // Add userId field for consistency
           username, 
           email,
-          fishEmoji: userData?.fishEmoji || fishEmoji
+          fishEmoji: finalFishEmoji
         });
         await loadData();
         setLoading(false);
@@ -62,26 +79,31 @@ export default function Fishbowl({ user }) {
       initUser();
     }
 
-    // Set up real-time subscription for users
+    // Set up real-time subscription for users - set up immediately, will update when currentUser is set
     let subscription;
-    if (user && currentUser) {
+    if (user) {
       subscription = client.models.User.observeQuery().subscribe({
         next: (data) => {
+          // Get all online users
           const online = data.items.filter((u) => u.isOnline === true);
-          // Ensure current user is included
-          const allOnline = [...online];
-          const currentUserInList = allOnline.find(u => (u.userId || u.id) === currentUser.userId);
-          if (!currentUserInList && currentUser.isOnline) {
-            allOnline.push({
-              id: currentUser.id,
-              userId: currentUser.userId,
-              username: currentUser.username,
-              email: currentUser.email,
-              fishEmoji: currentUser.fishEmoji,
-              mood: myMood,
-              isOnline: true,
-            });
+          
+          // Ensure current user is included if they exist
+          let allOnline = [...online];
+          if (currentUser && currentUser.isOnline) {
+            const currentUserInList = allOnline.find(u => (u.userId || u.id) === currentUser.userId);
+            if (!currentUserInList) {
+              allOnline.push({
+                id: currentUser.id,
+                userId: currentUser.userId,
+                username: currentUser.username,
+                email: currentUser.email,
+                fishEmoji: currentUser.fishEmoji,
+                mood: myMood,
+                isOnline: true,
+              });
+            }
           }
+          
           setOnlineUsers(allOnline);
           
           // Update fish positions based on online users
@@ -102,7 +124,7 @@ export default function Fishbowl({ user }) {
           setFishPositions(positions);
         },
         error: (err) => {
-          console.error("Subscription error:", err);
+          console.error("User subscription error:", err);
         }
       });
     }
@@ -116,13 +138,16 @@ export default function Fishbowl({ user }) {
         });
         setUserMoods(moodMap);
       },
+      error: (err) => {
+        console.error("Mood subscription error:", err);
+      }
     });
 
     return () => {
       if (subscription) subscription.unsubscribe();
       if (moodSubscription) moodSubscription.unsubscribe();
     };
-  }, [user, currentUser]);
+  }, [user, currentUser, myMood]);
 
   const loadData = async () => {
     try {

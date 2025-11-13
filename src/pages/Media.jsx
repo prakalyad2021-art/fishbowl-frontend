@@ -28,13 +28,25 @@ export default function Media({ user }) {
         const email = user?.attributes?.email || authUser.signInDetails?.loginId || "";
         const username = email ? email.split('@')[0] : (user?.username || "user");
         
-        // Get user's fish emoji from User model
+        // Get user's fish emoji from User model - MUST match Fishbowl
         const existingUser = await client.models.User.list({
           filter: { userId: { eq: authUser.userId } },
         });
-        let fishEmoji = fishEmojis[Math.floor(Math.random() * fishEmojis.length)];
+        
+        let fishEmoji;
         if (existingUser.data.length > 0 && existingUser.data[0].fishEmoji) {
+          // Use existing fish emoji (never change it)
           fishEmoji = existingUser.data[0].fishEmoji;
+        } else {
+          // User doesn't exist yet - assign one and save it
+          fishEmoji = fishEmojis[Math.floor(Math.random() * fishEmojis.length)];
+          // Create user with fish emoji
+          await dataHelpers.createOrUpdateUser(authUser.userId, {
+            username,
+            email,
+            fishEmoji,
+            isOnline: true,
+          });
         }
         
         setCurrentUser({

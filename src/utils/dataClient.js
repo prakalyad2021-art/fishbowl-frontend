@@ -13,10 +13,16 @@ export const dataHelpers = {
       });
       
       if (existing.data.length > 0) {
+        // User exists - update but preserve fishEmoji if not provided
+        const updateData = { ...userData };
+        // Don't overwrite fishEmoji if it's not in userData (to prevent changing it)
+        if (!('fishEmoji' in userData) && existing.data[0].fishEmoji) {
+          updateData.fishEmoji = existing.data[0].fishEmoji;
+        }
         const updated = await client.models.User.update({
           id: existing.data[0].id,
           userId: userId,
-          ...userData,
+          ...updateData,
           isOnline: true,
           lastSeen: new Date().toISOString(),
         });

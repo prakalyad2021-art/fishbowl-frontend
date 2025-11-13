@@ -83,7 +83,14 @@ export default function Prompts({ user }) {
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours from now
 
-      await client.models.PromptResponse.create({
+      console.log('Submitting response:', {
+        promptId: prompt.id,
+        userId: currentUser.id,
+        username: currentUser.username,
+        responseText: myResponse,
+      });
+
+      const result = await client.models.PromptResponse.create({
         promptId: prompt.id,
         userId: currentUser.id,
         username: currentUser.username,
@@ -91,11 +98,14 @@ export default function Prompts({ user }) {
         expiresAt: expiresAt.toISOString(),
       });
 
+      console.log('Response created:', result);
+
       setMyResponse("");
       await loadResponses(prompt.id);
     } catch (error) {
       console.error("Error submitting response:", error);
-      alert("Failed to submit response");
+      console.error("Error details:", error.message, error.errors);
+      alert(`Failed to submit response: ${error.message || 'Unknown error'}`);
     } finally {
       setSubmitting(false);
     }
