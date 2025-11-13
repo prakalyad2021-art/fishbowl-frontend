@@ -1,20 +1,129 @@
 import React, { useEffect, useState } from "react";
+import { getCurrentUser } from "aws-amplify/auth";
+import { dataHelpers } from "../utils/dataClient";
+import { client } from "../utils/dataClient";
 
-export default function Fishbowl() {
-  const fishEmojis = ["🐠", "🐟", "🐡", "🦈", "🐙", "🐬"];
+const fishEmojis = ["🐠", "🐟", "🐡", "🦈", "🐙", "🐬"];
+
+export default function Fishbowl({ user }) {
   const [fishPositions, setFishPositions] = useState([]);
   const [myMood, setMyMood] = useState("(・∀・)");
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [userMoods, setUserMoods] = useState({});
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Random fish positions + drift
+  // Initialize user and fetch data
   useEffect(() => {
-    const positions = fishEmojis.map(() => ({
-      x: Math.random() * 80 + 10,
-      y: Math.random() * 60 + 20,
-      drift: Math.random() * 2 - 1,
-      direction: Math.random() > 0.5 ? 1 : -1,
-    }));
-    setFishPositions(positions);
-  }, []);
+    const initUser = async () => {
+      try {
+        const authUser = await getCurrentUser();
+        const userId = authUser.userId;
+        const username = user?.username || authUser.signInDetails?.loginId || "user";
+        const email = user?.attributes?.email || "";
+
+        // Create or update user profile
+        await dataHelpers.createOrUpdateUser(userId, {
+          username,
+          email,
+          fishEmoji: fishEmojis[Math.floor(Math.random() * fishEmojis.length)],
+          mood: myMood,
+          isOnline: true,
+        });
+
+        setCurrentUser({ id: userId, username, email });
+        await loadData();
+        setLoading(false);
+      } catch (error) {
+        console.error("Error initializing user:", error);
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      initUser();
+    }
+
+    // Set up real-time subscription for users
+    const subscription = client.models.User.observeQuery().subscribe({
+      next: (data) => {
+        const online = data.items.filter((u) => u.isOnline);
+        setOnlineUsers(online);
+        
+        // Update fish positions based on online users
+        const positions = online.map((_, i) => ({
+          x: Math.random() * 80 + 10,
+          y: Math.random() * 60 + 20,
+          drift: Math.random() * 2 - 1,
+          direction: Math.random() > 0.5 ? 1 : -1,
+          userId: online[i]?.id,
+          username: online[i]?.username,
+          fishEmoji: online[i]?.fishEmoji || fishEmojis[i % fishEmojis.length],
+          mood: online[i]?.mood || "(・∀・)",
+        }));
+        setFishPositions(positions);
+      },
+    });
+
+    // Set up real-time subscription for moods
+    const moodSubscription = client.models.Mood.observeQuery().subscribe({
+      next: (data) => {
+        const moodMap = {};
+        data.items.forEach((mood) => {
+          moodMap[mood.userId] = mood.moodText;
+        });
+        setUserMoods(moodMap);
+      },
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      moodSubscription.unsubscribe();
+    };
+  }, [user]);
+
+  const loadData = async () => {
+    try {
+      const users = await dataHelpers.getOnlineUsers();
+      setOnlineUsers(users);
+
+      const moods = await dataHelpers.getRecentMoods();
+      const moodMap = {};
+      moods.forEach((mood) => {
+        moodMap[mood.userId] = mood.moodText;
+      });
+      setUserMoods(moodMap);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    }
+  };
+
+  // Update mood
+  const handleUpdateMood = async () => {
+    if (!currentUser || !myMood.trim()) return;
+
+    try {
+      await dataHelpers.updateMood(
+        currentUser.id,
+        currentUser.username,
+        currentUser.fishEmoji || "🐡",
+        myMood
+      );
+
+      // Update user's current mood
+      await dataHelpers.createOrUpdateUser(currentUser.id, {
+        username: currentUser.username,
+        email: currentUser.email,
+        mood: myMood,
+        isOnline: true,
+      });
+
+      alert("Mood updated! 🐠");
+    } catch (error) {
+      console.error("Error updating mood:", error);
+      alert("Failed to update mood");
+    }
+  };
 
   // Gentle swimming motion
   useEffect(() => {
@@ -30,11 +139,17 @@ export default function Fishbowl() {
     return () => clearInterval(interval);
   }, []);
 
-  const activeFriends = [
-    { name: "@alice", fish: "🐡", active: true },
-    { name: "@bob", fish: "🐟", active: true },
-    { name: "@charlie", fish: "🐠", active: false },
-  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl text-blue-700">Loading Fishbowl...</div>
+      </div>
+    );
+  }
+
+  // Get all users (active and inactive) for the friends list
+  const allUsers = [...onlineUsers];
+  const inactiveUsers = allUsers.filter((u) => !u.isOnline);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#f5f5f5] text-gray-800 overflow-hidden p-6">
@@ -98,30 +213,33 @@ export default function Fishbowl() {
             ></div>
           ))}
 
-          {/* Floating fish with thought bubbles */}
-          {fishPositions.map((fish, i) => (
-            <div
-              key={i}
-              className="absolute transition-all duration-500 ease-in-out flex flex-col items-center"
-              style={{
-                left: `${fish.x}%`,
-                top: `${fish.y}%`,
-              }}
-            >
-              <span
-                className="text-sm mb-1 px-2 py-1 rounded-full bg-white/70 backdrop-blur-sm shadow"
-                style={{ fontSize: "0.85rem" }}
+          {/* Floating fish with thought bubbles - only show active users */}
+          {fishPositions
+            .filter((fish) => fish.userId) // Only show users with IDs
+            .map((fish, i) => (
+              <div
+                key={fish.userId || i}
+                className="absolute transition-all duration-500 ease-in-out flex flex-col items-center"
+                style={{
+                  left: `${fish.x}%`,
+                  top: `${fish.y}%`,
+                }}
               >
-                {"(・∀・)"}
-              </span>
-              <span
-                className="text-4xl"
-                style={{ filter: "drop-shadow(0 0 6px rgba(255,255,150,0.8))" }}
-              >
-                {fishEmojis[i % fishEmojis.length]}
-              </span>
-            </div>
-          ))}
+                <span
+                  className="text-sm mb-1 px-2 py-1 rounded-full bg-white/70 backdrop-blur-sm shadow"
+                  style={{ fontSize: "0.85rem" }}
+                >
+                  {userMoods[fish.userId] || fish.mood || "(・∀・)"}
+                </span>
+                <span
+                  className="text-4xl cursor-pointer hover:scale-110 transition"
+                  style={{ filter: "drop-shadow(0 0 6px rgba(255,255,150,0.8))" }}
+                  title={`@${fish.username}`}
+                >
+                  {fish.fishEmoji}
+                </span>
+              </div>
+            ))}
         </div>
 
         {/* Right panels */}
@@ -136,13 +254,18 @@ export default function Fishbowl() {
               backdropFilter: "blur(12px)",
             }}
           >
-            <span className="text-6xl mb-2">🐡</span>
-            <h2 className="font-semibold text-lg text-blue-700 mb-4">@you</h2>
+            <span className="text-6xl mb-2">
+              {currentUser?.fishEmoji || "🐡"}
+            </span>
+            <h2 className="font-semibold text-lg text-blue-700 mb-4">
+              @{currentUser?.username || "you"}
+            </h2>
             <input
               type="text"
               placeholder="(・∀・)"
               value={myMood}
               onChange={(e) => setMyMood(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleUpdateMood()}
               className="px-4 py-2 rounded-full bg-white/60 backdrop-blur-sm text-sm text-center outline-none placeholder:text-gray-600 mb-3 w-full"
               style={{
                 border: "1px solid rgba(255,255,255,0.8)",
@@ -150,6 +273,7 @@ export default function Fishbowl() {
               }}
             />
             <button
+              onClick={handleUpdateMood}
               className="px-4 py-2 rounded-full font-medium text-blue-700 hover:scale-105 transition w-full"
               style={{
                 background: "linear-gradient(145deg, #dff0ff, #eaf8ff)",
@@ -171,19 +295,49 @@ export default function Fishbowl() {
               backdropFilter: "blur(12px)",
             }}
           >
-            <h3 className="font-semibold text-blue-700 mb-3 text-center">Active Friends</h3>
+            <h3 className="font-semibold text-blue-700 mb-3 text-center">
+              Active Friends ({onlineUsers.length})
+            </h3>
             <div className="flex flex-col gap-3">
-              {activeFriends.map((f, i) => (
-                <div
-                  key={i}
-                  className={`flex items-center gap-3 p-2 rounded-xl ${
-                    f.active ? "" : "filter grayscale opacity-40"
-                  }`}
-                >
-                  <span className="text-2xl">{f.fish}</span>
-                  <span className="font-medium">{f.name}</span>
-                </div>
-              ))}
+              {onlineUsers.length === 0 ? (
+                <p className="text-gray-500 text-center text-sm">
+                  No friends online yet. Invite them to join! 🐠
+                </p>
+              ) : (
+                onlineUsers.map((friend) => (
+                  <div
+                    key={friend.id}
+                    className="flex items-center gap-3 p-2 rounded-xl"
+                  >
+                    <span className="text-2xl">{friend.fishEmoji || "🐠"}</span>
+                    <div className="flex-1">
+                      <span className="font-medium">@{friend.username}</span>
+                      {userMoods[friend.id] && (
+                        <p className="text-xs text-gray-600">
+                          {userMoods[friend.id]}
+                        </p>
+                      )}
+                    </div>
+                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  </div>
+                ))
+              )}
+              {/* Show inactive friends (greyed out) */}
+              {inactiveUsers.length > 0 && (
+                <>
+                  <div className="border-t border-gray-300 my-2"></div>
+                  <h4 className="text-xs text-gray-500 mb-2">Inactive</h4>
+                  {inactiveUsers.map((friend) => (
+                    <div
+                      key={friend.id}
+                      className="flex items-center gap-3 p-2 rounded-xl filter grayscale opacity-40"
+                    >
+                      <span className="text-2xl">{friend.fishEmoji || "🐠"}</span>
+                      <span className="font-medium">@{friend.username}</span>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         </div>
