@@ -24,5 +24,6 @@ dist-ssr
 *.sw?
 
 # Amplify
-amplify_outputs.json
+# amplify_outputs.json - Keep this file, it's needed for deployment
 .amplify-hosting
+.amplify/artifacts
