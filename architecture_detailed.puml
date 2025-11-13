@@ -1,180 +1,239 @@
-@startuml Fishbowl_Detailed_Architecture
+@startuml Fishbowl_System_Architecture
 !theme aws-orange
 skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 10
 skinparam componentStyle rectangle
 
-title Fishbowl Application - Detailed System Architecture with Data Flow
+title Fishbowl Social Media Application - System Architecture\nComplete AWS Services Integration
 
-' User Interactions
-actor User as user
-actor "Friend User" as friend
-
-' Frontend Components
-package "Client Application (Browser)" {
-    component [React App\nPort 3000/443] as reactapp
-    component [Fishbowl Page\nReal-time UI] as fishbowl
-    component [Chatroom Page\nMessaging] as chat
-    component [Media Page\nFeed] as media
-    component [Other Pages\nPrompts, Journal, etc.] as otherpages
+' Define AWS Service Colors
+skinparam component {
+    BackgroundColor<<AWS>> #FF9900
+    BorderColor<<AWS>> #232F3E
+    FontColor<<AWS>> #FFFFFF
+    FontStyle<<AWS>> bold
 }
 
-' CDN & Hosting
-cloud "Internet" as internet
-node "AWS Amplify Hosting\nCDN Distribution" as cdn
+skinparam component {
+    BackgroundColor<<Frontend>> #4A90E2
+    BorderColor<<Frontend>> #2E5C8A
+    FontColor<<Frontend>> #FFFFFF
+}
+
+skinparam component {
+    BackgroundColor<<Database>> #3F48CC
+    BorderColor<<Database>> #2E3A8A
+    FontColor<<Database>> #FFFFFF
+}
+
+skinparam component {
+    BackgroundColor<<Storage>> #569A31
+    BorderColor<<Storage>> #3D6B22
+    FontColor<<Storage>> #FFFFFF
+}
+
+' Frontend Layer
+package "Frontend Layer" <<Frontend>> {
+    component [React Application\nVite + React 19] as ReactApp
+    component [Fishbowl Module\nReal-time Presence] as Fishbowl
+    component [Chatroom Module\nReal-time Chat] as Chatroom
+    component [Prompts Module\nDaily Questions] as Prompts
+    component [Media Module\nFeed & Upload] as Media
+    component [Journal Module\nPersonal Entries] as Journal
+    component [Calendar Module\nEvent Planning] as Calendar
+    component [Stats Module\nAnalytics] as Stats
+}
+
+' AWS Amplify Services
+package "AWS Amplify Platform" <<AWS>> {
+    component [Amplify Hosting\nStatic Site + CI/CD] as AmplifyHosting <<AWS>>
+    component [Amplify Console\nBuild Pipeline] as AmplifyConsole <<AWS>>
+}
 
 ' Authentication Services
-package "Authentication Services" {
-    component [Cognito User Pool\nus-east-1_SjNqt7EvJ] as cognito
-    component [Cognito Identity Pool\nFederated Identities] as identity
-    component [IAM Roles\nAuthenticated User Role] as iamrole
+package "Authentication Services" <<AWS>> {
+    component [Cognito User Pool\nSign-up/Sign-in] as CognitoUserPool <<AWS>>
+    component [Cognito Identity Pool\nAWS Credentials] as CognitoIdentityPool <<AWS>>
+    component [IAM Roles & Policies\nAccess Control] as IAM <<AWS>>
 }
 
-' API Gateway
-package "API Services" {
-    component [AWS AppSync\nGraphQL Endpoint] as appsync {
-        component [GraphQL Schema\nType Definitions] as schema
-        component [Resolvers\nDynamoDB] as resolvers
-        component [Subscriptions\nWebSocket] as websocket
+' API & Data Services
+package "API & Data Services" <<AWS>> {
+    component [AppSync GraphQL API\nReal-time Subscriptions] as AppSync <<AWS>>
+    component [DynamoDB\n10 Tables] as DynamoDB <<Database>>
+    database "DynamoDB Tables" <<Database>> {
+        component [User Table] as UserTable
+        component [Message Table] as MessageTable
+        component [Mood Table] as MoodTable
+        component [Prompt Table] as PromptTable
+        component [PromptResponse Table] as PromptResponseTable
+        component [MediaPost Table] as MediaPostTable
+        component [MediaComment Table] as MediaCommentTable
+        component [JournalEntry Table] as JournalEntryTable
+        component [CalendarEvent Table] as CalendarEventTable
+        component [UserStats Table] as UserStatsTable
     }
-}
-
-' Database Services
-package "Database Services" {
-    database "DynamoDB\n10 Tables" as dynamodb {
-        component [User Table\nPK: id] as usertable
-        component [Message Table\nPK: id] as messagetable
-        component [Mood Table\nPK: id] as moodtable
-        component [MediaPost Table\nPK: id] as mediatable
-        component [Other Tables\n6 more] as othertables
-    }
+    DynamoDB --> UserTable
+    DynamoDB --> MessageTable
+    DynamoDB --> MoodTable
+    DynamoDB --> PromptTable
+    DynamoDB --> PromptResponseTable
+    DynamoDB --> MediaPostTable
+    DynamoDB --> MediaCommentTable
+    DynamoDB --> JournalEntryTable
+    DynamoDB --> CalendarEventTable
+    DynamoDB --> UserStatsTable
 }
 
 ' Storage Services
-package "Storage Services" {
-    storage "Amazon S3\nfishbowlMedia Bucket" as s3 {
-        component [Media Files\nmedia/{identity_id}/] as mediafiles
-        component [Access Policies\nIAM-based] as policies
-    }
+package "Storage Services" <<AWS>> {
+    component [S3 Bucket\nMedia Storage] as S3 <<Storage>>
 }
 
 ' Compute Services
-package "Serverless Compute" {
-    component [Lambda Function\ncalendarReminder] as lambda
-    component [EventBridge Rule\nDaily Schedule] as eventbridge
+package "Compute Services" <<AWS>> {
+    component [Lambda Function\nCalendar Reminders] as Lambda <<AWS>>
+    component [EventBridge\nScheduled Triggers] as EventBridge <<AWS>>
 }
+
+' Monitoring Services
+package "Monitoring Services" <<AWS>> {
+    component [CloudWatch\nLogs & Metrics] as CloudWatch <<AWS>>
+}
+
+' User
+actor User as user
+
+' Frontend Connections
+user --> ReactApp : "Access Application"
+ReactApp --> Fishbowl
+ReactApp --> Chatroom
+ReactApp --> Prompts
+ReactApp --> Media
+ReactApp --> Journal
+ReactApp --> Calendar
+ReactApp --> Stats
+
+' Deployment Flow
+ReactApp --> AmplifyHosting : "Deployed via"
+AmplifyHosting --> AmplifyConsole : "Managed by"
+
+' Authentication Flow
+ReactApp --> CognitoUserPool : "1. Sign-up/Sign-in"
+CognitoUserPool --> CognitoIdentityPool : "2. Get Identity"
+CognitoIdentityPool --> IAM : "3. Assume Role"
+IAM --> S3 : "4. Grant S3 Access"
+IAM --> AppSync : "4. Grant API Access"
+
+' API Connections - Fishbowl
+Fishbowl --> AppSync : "Query/Subscribe\nUser & Mood"
+AppSync --> DynamoDB : "Data Operations"
+AppSync --> UserTable : "Read/Write"
+AppSync --> MoodTable : "Read/Write"
+AppSync ..> Fishbowl : "Real-time Updates\n(WebSocket)"
+
+' API Connections - Chatroom
+Chatroom --> AppSync : "Query/Subscribe\nMessages"
+AppSync --> DynamoDB : "Data Operations"
+AppSync --> MessageTable : "Read/Write"
+AppSync ..> Chatroom : "Real-time Messages\n(WebSocket)"
+Chatroom --> S3 : "Upload Media"
+S3 --> Chatroom : "Media URL"
+
+' API Connections - Prompts
+Prompts --> AppSync : "Query/Subscribe\nPrompts & Responses"
+AppSync --> DynamoDB : "Data Operations"
+AppSync --> PromptTable : "Read/Write"
+AppSync --> PromptResponseTable : "Read/Write"
+AppSync ..> Prompts : "Real-time Responses\n(WebSocket)"
+
+' API Connections - Media
+Media --> AppSync : "Query/Subscribe\nPosts & Comments"
+AppSync --> DynamoDB : "Data Operations"
+AppSync --> MediaPostTable : "Read/Write"
+AppSync --> MediaCommentTable : "Read/Write"
+AppSync ..> Media : "Real-time Posts\n(WebSocket)"
+Media --> S3 : "Upload Media Files"
+S3 --> Media : "Media URLs"
+
+' API Connections - Journal
+Journal --> AppSync : "Query/Write\nEntries"
+AppSync --> DynamoDB : "Data Operations"
+AppSync --> JournalEntryTable : "Read/Write"
+
+' API Connections - Calendar
+Calendar --> AppSync : "Query/Subscribe\nEvents"
+AppSync --> DynamoDB : "Data Operations"
+AppSync --> CalendarEventTable : "Read/Write"
+AppSync ..> Calendar : "Real-time Events\n(WebSocket)"
+
+' API Connections - Stats
+Stats --> AppSync : "Query\nStatistics"
+AppSync --> DynamoDB : "Data Operations"
+AppSync --> UserStatsTable : "Read/Write"
+
+' Scheduled Tasks Flow
+EventBridge --> Lambda : "Daily 9 AM UTC\nTrigger"
+Lambda --> AppSync : "Query Events"
+AppSync --> DynamoDB : "Data Operations"
+AppSync --> CalendarEventTable : "Read Events"
+Lambda --> CloudWatch : "Log Results"
 
 ' Monitoring
-package "Observability" {
-    component [CloudWatch Logs\nApplication Logs] as logs
-    component [CloudWatch Metrics\nPerformance] as metrics
-}
+AppSync --> CloudWatch : "API Logs"
+Lambda --> CloudWatch : "Function Logs"
+S3 --> CloudWatch : "Access Logs"
+CognitoUserPool --> CloudWatch : "Auth Logs"
 
-' User Flow - Authentication
-user --> reactapp : 1. Access Application\n(HTTPS)
-reactapp --> cognito : 2. Sign In Request\n(Email/Password)
-cognito --> identity : 3. Issue Identity Token
-identity --> iamrole : 4. Assume IAM Role\n(Get Credentials)
-iamrole --> reactapp : 5. Return Credentials
+' Data Flow Annotations
+note right of AppSync
+  **Real-time Subscriptions:**
+  - User presence updates
+  - New messages
+  - Mood changes
+  - New posts/comments
+  - Calendar events
+end note
 
-' User Flow - Real-time Data
-reactapp --> appsync : 6. GraphQL Query\n(List Users)
-appsync --> resolvers : 7. Resolve Query
-resolvers --> usertable : 8. Query DynamoDB
-usertable --> resolvers : 9. Return Data
-resolvers --> appsync : 10. Format Response
-appsync --> reactapp : 11. Return JSON
+note right of S3
+  **Media Storage:**
+  - Photos
+  - Videos
+  - Audio files
+  - GIFs
+  Path: media/{identity_id}/*
+end note
 
-' Real-time Subscription Flow
-reactapp --> websocket : 12. Subscribe\n(observeQuery)
-websocket --> appsync : 13. WebSocket Connection
-appsync --> dynamodb : 14. Monitor Changes\n(Streams)
-dynamodb --> appsync : 15. Change Event
-appsync --> websocket : 16. Push Update
-websocket --> reactapp : 17. Real-time Update\n(All Clients)
+note right of Lambda
+  **Scheduled Function:**
+  - Runs daily at 9 AM UTC
+  - Checks CalendarEvent table
+  - Sends reminders to tagged users
+end note
 
-' Media Upload Flow
-reactapp --> s3 : 18. Upload Media\n(PutObject with IAM)
-iamrole --> s3 : 19. Verify Permissions
-s3 --> mediafiles : 20. Store File
-s3 --> reactapp : 21. Return URL
-reactapp --> appsync : 22. Create MediaPost\n(Mutation)
-appsync --> mediatable : 23. Store Metadata
-
-' Chat Message Flow
-reactapp --> appsync : 24. Send Message\n(Mutation)
-appsync --> messagetable : 25. Store Message
-messagetable --> appsync : 26. Trigger Subscription
-appsync --> websocket : 27. Broadcast to All
-websocket --> reactapp : 28. Update UI\n(All Users)
-
-' Mood Update Flow
-reactapp --> appsync : 29. Update Mood\n(Mutation)
-appsync --> moodtable : 30. Create Mood Entry
-appsync --> usertable : 31. Update User.mood
-moodtable --> appsync : 32. Trigger Subscription
-appsync --> websocket : 33. Broadcast Mood
-websocket --> reactapp : 34. Update Fishbowl\n(All Users See)
-
-' Scheduled Task Flow
-eventbridge --> lambda : 35. Daily Trigger\n(9 AM UTC)
-lambda --> appsync : 36. Query CalendarEvents\n(GraphQL)
-appsync --> othertables : 37. Query Events\n(Filter by Date)
-othertables --> appsync : 38. Return Events
-appsync --> lambda : 39. Process Events
-lambda --> logs : 40. Log Results
-
-' Monitoring Flow
-appsync --> logs : 41. API Logs
-lambda --> logs : 42. Function Logs
-s3 --> logs : 43. Access Logs
-logs --> metrics : 44. Generate Metrics
-
-' Friend User Flow (Parallel)
-friend --> reactapp : Same Flow
-reactapp --> websocket : Subscribe
-websocket --> friend : Real-time Updates\n(See User's Fish)
-
-' Styling
-skinparam rectangle {
-    BackgroundColor<<Frontend>> #E3F2FD
-    BackgroundColor<<Auth>> #FFF9C4
-    BackgroundColor<<API>> #FFEBEE
-    BackgroundColor<<DB>> #E0F2F1
-    BackgroundColor<<Storage>> #F1F8E9
-    BackgroundColor<<Compute>> #FCE4EC
-    BackgroundColor<<Monitor>> #F3E5F5
-}
-
-reactapp <<Frontend>>
-cognito <<Auth>>
-identity <<Auth>>
-iamrole <<Auth>>
-appsync <<API>>
-dynamodb <<DB>>
-s3 <<Storage>>
-lambda <<Compute>>
-eventbridge <<Compute>>
-logs <<Monitor>>
-metrics <<Monitor>>
+note right of DynamoDB
+  **10 DynamoDB Tables:**
+  1. User
+  2. Message
+  3. Mood
+  4. Prompt
+  5. PromptResponse
+  6. MediaPost
+  7. MediaComment
+  8. JournalEntry
+  9. CalendarEvent
+  10. UserStats
+end note
 
 legend right
-    |<#E3F2FD> Frontend Layer |
-    |<#FFF9C4> Authentication |
-    |<#FFEBEE> API Services |
-    |<#E0F2F1> Database |
-    |<#F1F8E9> Storage |
-    |<#FCE4EC> Compute |
-    |<#F3E5F5> Monitoring |
-    
-    **Data Flow Numbers:**
-    1-5: Authentication
-    6-11: Query Flow
-    12-17: Real-time Subscription
-    18-23: Media Upload
-    24-28: Chat Messaging
-    29-34: Mood Updates
-    35-40: Scheduled Tasks
-    41-44: Monitoring
+  |<#FF9900> AWS Service |
+  |<#4A90E2> Frontend Component |
+  |<#3F48CC> Database |
+  |<#569A31> Storage |
+  |--| Data Flow |
+  |..| Real-time Subscription |
+  |==| Scheduled Trigger |
 endlegend
 
 @enduml
