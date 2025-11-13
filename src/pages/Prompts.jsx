@@ -28,16 +28,22 @@ export default function Prompts({ user }) {
   const loadTodayPrompt = async () => {
     try {
       const today = new Date().toISOString().split("T")[0];
+      console.log("Loading prompt for date:", today);
+      
       const prompts = await client.models.Prompt.list({
         filter: { date: { eq: today } },
       });
 
+      console.log("Found prompts:", prompts.data.length);
+
       if (prompts.data.length > 0) {
         const todayPrompt = prompts.data[0];
+        console.log("Using existing prompt:", todayPrompt.promptText);
         setPrompt(todayPrompt);
         await loadResponses(todayPrompt.id);
       } else {
         // Create today's prompt if doesn't exist
+        console.log("Creating new prompt for today");
         const dailyPrompts = [
           "What made you smile today? 😊",
           "Share a moment that made your day better ✨",
@@ -48,14 +54,31 @@ export default function Prompts({ user }) {
           "What's a small win you had today? 🎉",
         ];
         const randomPrompt = dailyPrompts[Math.floor(Math.random() * dailyPrompts.length)];
-        const newPrompt = await client.models.Prompt.create({
-          promptText: randomPrompt,
-          date: today,
-        });
-        setPrompt(newPrompt.data);
+        try {
+          const newPrompt = await client.models.Prompt.create({
+            promptText: randomPrompt,
+            date: today,
+          });
+          console.log("Created new prompt:", newPrompt.data);
+          setPrompt(newPrompt.data);
+        } catch (createError) {
+          console.error("Error creating prompt:", createError);
+          // If creation fails, show a default prompt
+          setPrompt({
+            id: 'default',
+            promptText: randomPrompt,
+            date: today,
+          });
+        }
       }
     } catch (error) {
       console.error("Error loading prompt:", error);
+      // Show a default prompt if loading fails
+      setPrompt({
+        id: 'default',
+        promptText: "What's on your mind today? 💭",
+        date: new Date().toISOString().split("T")[0],
+      });
     }
   };
 

@@ -9,7 +9,10 @@ export const storage = defineStorage({
   access: (allow: any) => ({
     'media/{entity_id}/*': [
       allow.entity('identity').to(['read', 'write', 'delete']),
-      allow.authenticated.to(['read']),
+      allow.authenticated.to(['read', 'write']), // Allow authenticated users to write
+    ],
+    'media/*': [
+      allow.authenticated.to(['read']), // Allow reading all media
     ],
   }),
 });

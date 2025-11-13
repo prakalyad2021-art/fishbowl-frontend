@@ -88,7 +88,12 @@ export default function Media({ user }) {
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
+
+    console.log("File selected:", file.name, file.type, file.size);
 
     let type = "photo";
     if (file.type.startsWith("video/")) type = "video";
@@ -97,6 +102,7 @@ export default function Media({ user }) {
 
     setMediaFile(file);
     setMediaType(type);
+    console.log("Media file state updated:", file.name, type);
   };
 
   const uploadPost = async () => {
@@ -280,7 +286,7 @@ export default function Media({ user }) {
                   disabled={!mediaFile || uploading}
                   className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {uploading ? "Uploading..." : "Share Post"}
+                  {uploading ? "Uploading..." : mediaFile ? `Share Post (${mediaFile.name})` : "Please select a file"}
                 </button>
               </div>
             </div>

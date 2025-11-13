@@ -3,7 +3,7 @@ import { getCurrentUser } from "aws-amplify/auth";
 import { dataHelpers } from "../utils/dataClient";
 import { client } from "../utils/dataClient";
 
-const fishEmojis = ["🐠", "🐟", "🐡", "🦈", "🐙", "🐬"];
+  const fishEmojis = ["🐠", "🐟", "🐡", "🦈", "🐙", "🐬"];
 
 export default function Fishbowl({ user }) {
   const [fishPositions, setFishPositions] = useState([]);
@@ -79,36 +79,22 @@ export default function Fishbowl({ user }) {
       initUser();
     }
 
-    // Set up real-time subscription for users - set up immediately, will update when currentUser is set
+    // Set up real-time subscription for users - CRITICAL for showing all online users
     let subscription;
     if (user) {
       subscription = client.models.User.observeQuery().subscribe({
         next: (data) => {
-          // Get all online users
+          console.log("User subscription update:", data.items.length, "users");
+          // Get ALL online users - this is the key!
           const online = data.items.filter((u) => u.isOnline === true);
+          console.log("Online users:", online.map(u => ({ userId: u.userId, username: u.username, fishEmoji: u.fishEmoji })));
           
-          // Ensure current user is included if they exist
-          let allOnline = [...online];
-          if (currentUser && currentUser.isOnline) {
-            const currentUserInList = allOnline.find(u => (u.userId || u.id) === currentUser.userId);
-            if (!currentUserInList) {
-              allOnline.push({
-                id: currentUser.id,
-                userId: currentUser.userId,
-                username: currentUser.username,
-                email: currentUser.email,
-                fishEmoji: currentUser.fishEmoji,
-                mood: myMood,
-                isOnline: true,
-              });
-            }
-          }
+          // Set online users directly from subscription (this ensures real-time sync)
+          setOnlineUsers(online);
           
-          setOnlineUsers(allOnline);
-          
-          // Update fish positions based on online users
-          const positions = allOnline.map((user, i) => {
-            // Reuse existing position if fish already exists
+          // Update fish positions based on ALL online users
+          const positions = online.map((user, i) => {
+            // Reuse existing position if fish already exists (to prevent jumping)
             const existing = fishPositions.find(f => (f.userId === (user?.userId || user?.id)));
             return {
               x: existing?.x || Math.random() * 80 + 10,
@@ -117,7 +103,7 @@ export default function Fishbowl({ user }) {
               direction: existing?.direction || (Math.random() > 0.5 ? 1 : -1),
               userId: user?.userId || user?.id,
               username: user?.username,
-              fishEmoji: user?.fishEmoji || fishEmojis[i % fishEmojis.length],
+              fishEmoji: user?.fishEmoji || fishEmojis[i % fishEmojis.length], // Use stored fishEmoji
               mood: user?.mood || "(・∀・)",
             };
           });
@@ -151,29 +137,15 @@ export default function Fishbowl({ user }) {
 
   const loadData = async () => {
     try {
+      // Load all online users - this is just for initial load
+      // Real-time updates come from subscription
       const users = await dataHelpers.getOnlineUsers();
-      // Ensure current user is included
-      const allUsers = [...(users || [])];
-      if (currentUser) {
-        const currentUserInList = allUsers.find(u => (u.userId || u.id) === currentUser.userId);
-        if (!currentUserInList) {
-          // Add current user if not in list
-          allUsers.push({
-            id: currentUser.id,
-            userId: currentUser.userId,
-            username: currentUser.username,
-            email: currentUser.email,
-            fishEmoji: currentUser.fishEmoji,
-            mood: myMood,
-            isOnline: true,
-          });
-        }
-      }
-      setOnlineUsers(allUsers);
+      console.log("Loaded online users:", users.length);
+      setOnlineUsers(users || []);
       
-      // Set fish positions from loaded users (including current user)
-      if (allUsers.length > 0) {
-        const positions = allUsers.map((user, i) => {
+      // Set fish positions from loaded users
+      if (users && users.length > 0) {
+        const positions = users.map((user, i) => {
           // Reuse existing position if fish already exists
           const existing = fishPositions.find(f => (f.userId === (user?.userId || user?.id)));
           return {
@@ -183,7 +155,7 @@ export default function Fishbowl({ user }) {
             direction: existing?.direction || (Math.random() > 0.5 ? 1 : -1),
             userId: user?.userId || user?.id,
             username: user?.username,
-            fishEmoji: user?.fishEmoji || fishEmojis[i % fishEmojis.length],
+            fishEmoji: user?.fishEmoji || fishEmojis[i % fishEmojis.length], // Use stored fishEmoji
             mood: user?.mood || "(・∀・)",
           };
         });
@@ -350,11 +322,11 @@ export default function Fishbowl({ user }) {
                   <div
                     key={fish.userId || `fish-${i}`}
                     className="absolute transition-all duration-500 ease-in-out flex flex-col items-center z-10"
-                    style={{
-                      left: `${fish.x}%`,
-                      top: `${fish.y}%`,
-                    }}
-                  >
+              style={{
+                left: `${fish.x}%`,
+                top: `${fish.y}%`,
+              }}
+            >
                     {/* Thought bubble with mood */}
                     <div className="mb-1 relative">
                       <div className="px-3 py-1.5 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg border-2 border-blue-200 whitespace-nowrap">
@@ -363,16 +335,16 @@ export default function Fishbowl({ user }) {
                       {/* Bubble tail */}
                       <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-white/90 border-r-2 border-b-2 border-blue-200 rotate-45"></div>
                     </div>
-                    <span
+              <span
                       className="text-5xl cursor-pointer hover:scale-110 transition-transform"
                       style={{ filter: "drop-shadow(0 0 8px rgba(255,255,150,0.9))" }}
                       title={`@${fish.username || 'user'}`}
-                    >
+              >
                       {fish.fishEmoji || "🐠"}
                     </span>
                     <span className="text-xs mt-1 px-2 py-0.5 rounded-full bg-white/60 backdrop-blur-sm text-gray-700 font-medium">
                       @{fish.username || 'user'}
-                    </span>
+              </span>
                   </div>
                 );
               })
@@ -505,8 +477,8 @@ export default function Fishbowl({ user }) {
                     >
                       <span className="text-2xl">{friend.fishEmoji || "🐠"}</span>
                       <span className="font-medium">@{friend.username}</span>
-                    </div>
-                  ))}
+                </div>
+              ))}
                 </>
               )}
             </div>
