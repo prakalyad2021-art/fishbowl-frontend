@@ -1,0 +1,95 @@
+softwaresystem "Fishbowl Application" {
+  title "Fishbowl Application - High-Level Architecture"
+  description "AWS Cloud Services Integration"
+
+  container "Client Layer" {
+    description "React Frontend Application"
+    technology "Vite + React 19"
+    
+    component "React Frontend" {
+      description "Modules: Fishbowl (Real-time), Chatroom (Real-time), Prompts, Media Feed, Journal, Calendar, Stats"
+    }
+  }
+
+  container "AWS Cloud Services" {
+    description "10 AWS Services"
+    
+    container "Hosting & CI/CD" {
+      component "Amplify Hosting" {
+        description "Frontend Hosting"
+      }
+      component "Amplify Console" {
+        description "Build Pipeline"
+      }
+    }
+    
+    container "Authentication" {
+      component "Cognito User Pool" {
+        description "Sign-up/Sign-in"
+      }
+      component "IAM" {
+        description "Access Control"
+      }
+    }
+    
+    container "API & Data" {
+      component "AppSync GraphQL API" {
+        description "Real-time Subscriptions"
+      }
+      component "DynamoDB" {
+        description "10 Tables: User, Message, Mood, Prompt, PromptResponse, MediaPost, MediaComment, JournalEntry, CalendarEvent, UserStats"
+      }
+    }
+    
+    container "Storage" {
+      component "S3 Bucket" {
+        description "Media Files (Photos, Videos, Audio, GIFs)"
+      }
+    }
+    
+    container "Compute & Scheduling" {
+      component "Lambda" {
+        description "Calendar Reminders"
+      }
+      component "EventBridge" {
+        description "Scheduler (Daily 9 AM UTC)"
+      }
+    }
+    
+    container "Monitoring" {
+      component "CloudWatch" {
+        description "Logs & Metrics"
+      }
+    }
+  }
+}
+
+person "User" {
+  description "End User"
+}
+
+' Connections
+User -> "React Frontend" : "Access Application"
+"React Frontend" -> "Amplify Hosting" : "Deployed on"
+"Amplify Hosting" -> "Amplify Console" : "Managed by"
+
+"React Frontend" -> "Cognito User Pool" : "Authentication"
+"Cognito User Pool" -> "IAM" : "Credentials"
+"IAM" -> "AppSync GraphQL API" : "Authorize"
+"IAM" -> "S3 Bucket" : "Authorize"
+
+"React Frontend" -> "AppSync GraphQL API" : "GraphQL Queries/Mutations/Subscriptions"
+"AppSync GraphQL API" -> "DynamoDB" : "Data Operations"
+"AppSync GraphQL API" -> "React Frontend" : "Real-time Updates (WebSocket)"
+
+"React Frontend" -> "S3 Bucket" : "Upload Media"
+"S3 Bucket" -> "React Frontend" : "Media URLs"
+
+"EventBridge" -> "Lambda" : "Daily Trigger (9 AM UTC)"
+"Lambda" -> "AppSync GraphQL API" : "Query Events"
+"Lambda" -> "CloudWatch" : "Logs"
+
+"AppSync GraphQL API" -> "CloudWatch" : "API Logs"
+"S3 Bucket" -> "CloudWatch" : "Access Logs"
+"Cognito User Pool" -> "CloudWatch" : "Auth Logs"
+

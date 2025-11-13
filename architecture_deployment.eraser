@@ -1,0 +1,124 @@
+softwaresystem "Fishbowl Application" {
+  title "Fishbowl Application - AWS Deployment Architecture"
+  description "Service Topology & Connections"
+
+  container "Frontend Application" {
+    description "React Application"
+    technology "Vite + React 19"
+    
+    component "React App" {
+      description "8 Page Modules"
+    }
+    
+    component "Utilities" {
+      description "Data/Storage Clients"
+    }
+  }
+
+  container "AWS Amplify Platform" {
+    description "Hosting & Management"
+    technology "AWS Amplify"
+    
+    component "Amplify Hosting" {
+      description "Frontend Hosting, CI/CD Pipeline"
+    }
+    
+    component "Amplify Console" {
+      description "Build Management, Backend Config"
+    }
+  }
+
+  container "Authentication & Authorization" {
+    description "User Authentication"
+    technology "AWS Cognito + IAM"
+    
+    component "Cognito User Pool" {
+      description "Sign-up/Sign-in"
+    }
+    
+    component "Cognito Identity Pool" {
+      description "AWS Credentials"
+    }
+    
+    component "IAM Roles" {
+      description "Access Policies"
+    }
+  }
+
+  container "API & Data Layer" {
+    description "GraphQL API & Database"
+    technology "AWS AppSync + DynamoDB"
+    
+    component "AppSync" {
+      description "GraphQL API, Real-time Subscriptions"
+    }
+    
+    component "DynamoDB" {
+      description "10 Tables: User, Message, Mood, Prompt, PromptResponse, MediaPost, MediaComment, JournalEntry, CalendarEvent, UserStats"
+    }
+  }
+
+  container "Storage Layer" {
+    description "Media Storage"
+    technology "Amazon S3"
+    
+    component "S3 Bucket" {
+      description "Media Storage (fishbowlMedia), Path: media/{identity_id}/*"
+    }
+  }
+
+  container "Compute & Scheduling" {
+    description "Serverless Functions"
+    technology "AWS Lambda + EventBridge"
+    
+    component "Lambda Function" {
+      description "Calendar Reminder, Serverless"
+    }
+    
+    component "EventBridge" {
+      description "Scheduler, Daily 9 AM UTC"
+    }
+  }
+
+  container "Monitoring & Logging" {
+    description "Logging & Monitoring"
+    technology "AWS CloudWatch"
+    
+    component "CloudWatch" {
+      description "Logs & Metrics, Service Monitoring"
+    }
+  }
+}
+
+person "End User" {
+  description "Application User"
+}
+
+' Connections
+"End User" -> "React App" : "HTTPS"
+"React App" -> "Utilities"
+"React App" -> "Amplify Hosting" : "Deployed on"
+"Amplify Hosting" -> "Amplify Console" : "Managed by"
+
+"React App" -> "Cognito User Pool" : "1. Authenticate"
+"Cognito User Pool" -> "Cognito Identity Pool" : "2. Get Identity"
+"Cognito Identity Pool" -> "IAM Roles" : "3. Assume Role"
+"IAM Roles" -> "AppSync" : "4. Authorize API"
+"IAM Roles" -> "S3 Bucket" : "4. Authorize Storage"
+
+"Utilities" -> "AppSync" : "GraphQL Queries/Mutations"
+"AppSync" -> "DynamoDB" : "Data Operations"
+"AppSync" -> "React App" : "Real-time Subscriptions (WebSocket)"
+
+"Utilities" -> "S3 Bucket" : "Upload Media"
+"S3 Bucket" -> "React App" : "Media URLs"
+
+"EventBridge" -> "Lambda Function" : "Trigger Daily Schedule"
+"Lambda Function" -> "AppSync" : "Query Events"
+"Lambda Function" -> "CloudWatch" : "Logs"
+
+"AppSync" -> "CloudWatch" : "API Logs"
+"S3 Bucket" -> "CloudWatch" : "Access Logs"
+"Cognito User Pool" -> "CloudWatch" : "Auth Logs"
+"Lambda Function" -> "CloudWatch" : "Function Logs"
+

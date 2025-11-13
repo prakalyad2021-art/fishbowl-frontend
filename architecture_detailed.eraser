@@ -1,0 +1,187 @@
+softwaresystem "Fishbowl Social Media Application" {
+  title "Fishbowl Social Media Application - System Architecture"
+  description "Complete AWS Services Integration"
+
+  container "Frontend Layer" {
+    description "React 19 Application with 8 Modules"
+    technology "Vite + React 19 + Tailwind CSS"
+    
+    component "React Application" {
+      description "Main React App"
+    }
+    
+    component "Fishbowl Module" {
+      description "Real-time Presence & Mood Sharing"
+    }
+    
+    component "Chatroom Module" {
+      description "Real-time Chat with Media"
+    }
+    
+    component "Prompts Module" {
+      description "Daily Questions (24h expiration)"
+    }
+    
+    component "Media Module" {
+      description "Instagram-style Feed & Upload"
+    }
+    component "Journal Module" {
+      description "Personal Entries with Tags"
+    }
+    component "Calendar Module" {
+      description "Event Planning with Tagging"
+    }
+    component "Stats Module" {
+      description "Analytics & Visualization"
+    }
+  }
+
+  container "AWS Amplify Platform" {
+    description "Hosting & CI/CD"
+    technology "AWS Amplify"
+    
+    component "Amplify Hosting" {
+      description "Static Site + CI/CD"
+    }
+    
+    component "Amplify Console" {
+      description "Build Pipeline"
+    }
+  }
+
+  container "Authentication Services" {
+    description "User Authentication & Authorization"
+    technology "AWS Cognito + IAM"
+    
+    component "Cognito User Pool" {
+      description "Sign-up/Sign-in"
+    }
+    
+    component "Cognito Identity Pool" {
+      description "AWS Credentials"
+    }
+    
+    component "IAM Roles & Policies" {
+      description "Access Control"
+    }
+  }
+
+  container "API & Data Services" {
+    description "GraphQL API & Database"
+    technology "AWS AppSync + DynamoDB"
+    
+    component "AppSync GraphQL API" {
+      description "Real-time Subscriptions"
+    }
+    
+    component "DynamoDB" {
+      description "10 Tables: User, Message, Mood, Prompt, PromptResponse, MediaPost, MediaComment, JournalEntry, CalendarEvent, UserStats"
+    }
+  }
+
+  container "Storage Services" {
+    description "Media File Storage"
+    technology "Amazon S3"
+    
+    component "S3 Bucket" {
+      description "Media Storage (fishbowlMedia)"
+    }
+  }
+
+  container "Compute Services" {
+    description "Serverless Functions & Scheduling"
+    technology "AWS Lambda + EventBridge"
+    
+    component "Lambda Function" {
+      description "Calendar Reminders"
+    }
+    
+    component "EventBridge" {
+      description "Scheduled Triggers (Daily 9 AM UTC)"
+    }
+  }
+
+  container "Monitoring Services" {
+    description "Logging & Monitoring"
+    technology "AWS CloudWatch"
+    
+    component "CloudWatch" {
+      description "Logs & Metrics"
+    }
+  }
+}
+
+person "User" {
+  description "End User"
+}
+
+' User to Frontend
+User -> "React Application" : "Access Application"
+"React Application" -> "Fishbowl Module"
+"React Application" -> "Chatroom Module"
+"React Application" -> "Prompts Module"
+"React Application" -> "Media Module"
+"React Application" -> "Journal Module"
+"React Application" -> "Calendar Module"
+"React Application" -> "Stats Module"
+
+' Deployment Flow
+"React Application" -> "Amplify Hosting" : "Deployed via"
+"Amplify Hosting" -> "Amplify Console" : "Managed by"
+
+' Authentication Flow
+"React Application" -> "Cognito User Pool" : "1. Sign-up/Sign-in"
+"Cognito User Pool" -> "Cognito Identity Pool" : "2. Get Identity"
+"Cognito Identity Pool" -> "IAM Roles & Policies" : "3. Assume Role"
+"IAM Roles & Policies" -> "S3 Bucket" : "4. Grant S3 Access"
+"IAM Roles & Policies" -> "AppSync GraphQL API" : "4. Grant API Access"
+
+' API Connections - Fishbowl
+"Fishbowl Module" -> "AppSync GraphQL API" : "Query/Subscribe User & Mood"
+"AppSync GraphQL API" -> "DynamoDB" : "Data Operations"
+"AppSync GraphQL API" -> "Fishbowl Module" : "Real-time Updates (WebSocket)"
+
+' API Connections - Chatroom
+"Chatroom Module" -> "AppSync GraphQL API" : "Query/Subscribe Messages"
+"AppSync GraphQL API" -> "DynamoDB" : "Data Operations"
+"AppSync GraphQL API" -> "Chatroom Module" : "Real-time Messages (WebSocket)"
+"Chatroom Module" -> "S3 Bucket" : "Upload Media"
+"S3 Bucket" -> "Chatroom Module" : "Media URL"
+
+' API Connections - Prompts
+"Prompts Module" -> "AppSync GraphQL API" : "Query/Subscribe Prompts & Responses"
+"AppSync GraphQL API" -> "DynamoDB" : "Data Operations"
+"AppSync GraphQL API" -> "Prompts Module" : "Real-time Responses (WebSocket)"
+
+' API Connections - Media
+"Media Module" -> "AppSync GraphQL API" : "Query/Subscribe Posts & Comments"
+"AppSync GraphQL API" -> "DynamoDB" : "Data Operations"
+"AppSync GraphQL API" -> "Media Module" : "Real-time Posts (WebSocket)"
+"Media Module" -> "S3 Bucket" : "Upload Media Files"
+"S3 Bucket" -> "Media Module" : "Media URLs"
+
+' API Connections - Journal
+"Journal Module" -> "AppSync GraphQL API" : "Query/Write Entries"
+"AppSync GraphQL API" -> "DynamoDB" : "Data Operations"
+
+' API Connections - Calendar
+"Calendar Module" -> "AppSync GraphQL API" : "Query/Subscribe Events"
+"AppSync GraphQL API" -> "DynamoDB" : "Data Operations"
+"AppSync GraphQL API" -> "Calendar Module" : "Real-time Events (WebSocket)"
+
+' API Connections - Stats
+"Stats Module" -> "AppSync GraphQL API" : "Query Statistics"
+"AppSync GraphQL API" -> "DynamoDB" : "Data Operations"
+
+' Scheduled Tasks Flow
+"EventBridge" -> "Lambda Function" : "Daily 9 AM UTC Trigger"
+"Lambda Function" -> "AppSync GraphQL API" : "Query Events"
+"AppSync GraphQL API" -> "DynamoDB" : "Data Operations"
+"Lambda Function" -> "CloudWatch" : "Log Results"
+
+' Monitoring
+"AppSync GraphQL API" -> "CloudWatch" : "API Logs"
+"Lambda Function" -> "CloudWatch" : "Function Logs"
+"S3 Bucket" -> "CloudWatch" : "Access Logs"
+"Cognito User Pool" -> "CloudWatch" : "Auth Logs"
+
