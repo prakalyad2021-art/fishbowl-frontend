@@ -6,7 +6,7 @@ import { defineStorage } from '@aws-amplify/backend';
  */
 export const storage = defineStorage({
   name: 'fishbowlMedia',
-  access: (allow) => ({
+  access: (allow: any) => ({
     'media/{entity_id}/*': [
       allow.entity('identity').to(['read', 'write', 'delete']),
       allow.authenticated.to(['read']),

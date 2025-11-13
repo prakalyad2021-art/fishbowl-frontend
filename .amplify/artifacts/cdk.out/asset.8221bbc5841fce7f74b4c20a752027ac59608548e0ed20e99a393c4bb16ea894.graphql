@@ -1,0 +1,1069 @@
+type User @aws_iam @aws_cognito_user_pools {
+  username: String!
+  email: String!
+  fishEmoji: String
+  mood: String
+  isOnline: Boolean
+  lastSeen: AWSDateTime
+  id: ID!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  owner: String
+}
+
+type Message @aws_iam @aws_cognito_user_pools {
+  content: String!
+  senderId: ID!
+  senderUsername: String!
+  senderFishEmoji: String
+  mediaUrl: String
+  mediaType: String
+  createdAt: AWSDateTime
+  id: ID!
+  updatedAt: AWSDateTime!
+}
+
+type Mood @aws_iam @aws_cognito_user_pools {
+  userId: ID!
+  username: String!
+  fishEmoji: String
+  moodText: String!
+  createdAt: AWSDateTime
+  id: ID!
+  updatedAt: AWSDateTime!
+}
+
+type Prompt @aws_iam @aws_cognito_user_pools {
+  promptText: String!
+  date: AWSDate!
+  responses(filter: ModelPromptResponseFilterInput, sortDirection: ModelSortDirection, limit: Int, nextToken: String): ModelPromptResponseConnection
+  id: ID!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type PromptResponse @aws_iam @aws_cognito_user_pools {
+  prompt: Prompt
+  promptId: ID!
+  userId: ID!
+  username: String!
+  responseText: String!
+  createdAt: AWSDateTime
+  expiresAt: AWSDateTime
+  id: ID!
+  updatedAt: AWSDateTime!
+  owner: String
+}
+
+type MediaPost @aws_iam @aws_cognito_user_pools {
+  userId: ID!
+  username: String!
+  fishEmoji: String
+  mediaUrl: String!
+  mediaType: String!
+  caption: String
+  comments(filter: ModelMediaCommentFilterInput, sortDirection: ModelSortDirection, limit: Int, nextToken: String): ModelMediaCommentConnection
+  createdAt: AWSDateTime
+  id: ID!
+  updatedAt: AWSDateTime!
+  owner: String
+}
+
+type MediaComment @aws_iam @aws_cognito_user_pools {
+  mediaPost: MediaPost
+  mediaPostId: ID!
+  userId: ID!
+  username: String!
+  commentText: String!
+  createdAt: AWSDateTime
+  id: ID!
+  updatedAt: AWSDateTime!
+  owner: String
+}
+
+type JournalEntry @aws_iam @aws_cognito_user_pools {
+  userId: ID!
+  title: String
+  content: String!
+  tags: [String]
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+  id: ID!
+  owner: String
+}
+
+type CalendarEvent @aws_iam @aws_cognito_user_pools {
+  title: String!
+  description: String
+  eventDate: AWSDate!
+  eventTime: AWSTime
+  createdBy: ID!
+  createdByUsername: String!
+  taggedUsers: [ID]
+  reminderSent: Boolean
+  id: ID!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  owner: String
+}
+
+type UserStats @aws_iam @aws_cognito_user_pools {
+  userId: ID!
+  date: AWSDate!
+  moodCheckIns: Int
+  mediaShared: Int
+  isActive: Boolean
+  id: ID!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  owner: String
+}
+
+input AmplifyAIConversationTurnErrorInput {
+  errorType: String!
+  message: String!
+}
+
+input ModelStringInput {
+  ne: String
+  eq: String
+  le: String
+  lt: String
+  ge: String
+  gt: String
+  contains: String
+  notContains: String
+  between: [String]
+  beginsWith: String
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  size: ModelSizeInput
+}
+
+input ModelIntInput {
+  ne: Int
+  eq: Int
+  le: Int
+  lt: Int
+  ge: Int
+  gt: Int
+  between: [Int]
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+
+input ModelFloatInput {
+  ne: Float
+  eq: Float
+  le: Float
+  lt: Float
+  ge: Float
+  gt: Float
+  between: [Float]
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+
+input ModelBooleanInput {
+  ne: Boolean
+  eq: Boolean
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+
+input ModelIDInput {
+  ne: ID
+  eq: ID
+  le: ID
+  lt: ID
+  ge: ID
+  gt: ID
+  contains: ID
+  notContains: ID
+  between: [ID]
+  beginsWith: ID
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  size: ModelSizeInput
+}
+
+input ModelSubscriptionStringInput {
+  ne: String
+  eq: String
+  le: String
+  lt: String
+  ge: String
+  gt: String
+  contains: String
+  notContains: String
+  between: [String]
+  beginsWith: String
+  in: [String]
+  notIn: [String]
+}
+
+input ModelSubscriptionIntInput {
+  ne: Int
+  eq: Int
+  le: Int
+  lt: Int
+  ge: Int
+  gt: Int
+  between: [Int]
+  in: [Int]
+  notIn: [Int]
+}
+
+input ModelSubscriptionFloatInput {
+  ne: Float
+  eq: Float
+  le: Float
+  lt: Float
+  ge: Float
+  gt: Float
+  between: [Float]
+  in: [Float]
+  notIn: [Float]
+}
+
+input ModelSubscriptionBooleanInput {
+  ne: Boolean
+  eq: Boolean
+}
+
+input ModelSubscriptionIDInput {
+  ne: ID
+  eq: ID
+  le: ID
+  lt: ID
+  ge: ID
+  gt: ID
+  contains: ID
+  notContains: ID
+  between: [ID]
+  beginsWith: ID
+  in: [ID]
+  notIn: [ID]
+}
+
+enum ModelAttributeTypes {
+  binary
+  binarySet
+  bool
+  list
+  map
+  number
+  numberSet
+  string
+  stringSet
+  _null
+}
+
+input ModelSizeInput {
+  ne: Int
+  eq: Int
+  le: Int
+  lt: Int
+  ge: Int
+  gt: Int
+  between: [Int]
+}
+
+enum ModelSortDirection {
+  ASC
+  DESC
+}
+
+type ModelUserConnection @aws_iam @aws_cognito_user_pools {
+  items: [User]!
+  nextToken: String
+}
+
+input ModelUserFilterInput {
+  username: ModelStringInput
+  email: ModelStringInput
+  fishEmoji: ModelStringInput
+  mood: ModelStringInput
+  isOnline: ModelBooleanInput
+  lastSeen: ModelStringInput
+  id: ModelIDInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  and: [ModelUserFilterInput]
+  or: [ModelUserFilterInput]
+  not: ModelUserFilterInput
+  owner: ModelStringInput
+}
+
+type Query {
+  getUser(id: ID!): User @aws_iam @aws_cognito_user_pools
+  listUsers(filter: ModelUserFilterInput, limit: Int, nextToken: String): ModelUserConnection @aws_iam @aws_cognito_user_pools
+  getMessage(id: ID!): Message @aws_iam @aws_cognito_user_pools
+  listMessages(filter: ModelMessageFilterInput, limit: Int, nextToken: String): ModelMessageConnection @aws_iam @aws_cognito_user_pools
+  getMood(id: ID!): Mood @aws_iam @aws_cognito_user_pools
+  listMoods(filter: ModelMoodFilterInput, limit: Int, nextToken: String): ModelMoodConnection @aws_iam @aws_cognito_user_pools
+  getPrompt(id: ID!): Prompt @aws_iam @aws_cognito_user_pools
+  listPrompts(filter: ModelPromptFilterInput, limit: Int, nextToken: String): ModelPromptConnection @aws_iam @aws_cognito_user_pools
+  getPromptResponse(id: ID!): PromptResponse @aws_iam @aws_cognito_user_pools
+  listPromptResponses(filter: ModelPromptResponseFilterInput, limit: Int, nextToken: String): ModelPromptResponseConnection @aws_iam @aws_cognito_user_pools
+  getMediaPost(id: ID!): MediaPost @aws_iam @aws_cognito_user_pools
+  listMediaPosts(filter: ModelMediaPostFilterInput, limit: Int, nextToken: String): ModelMediaPostConnection @aws_iam @aws_cognito_user_pools
+  getMediaComment(id: ID!): MediaComment @aws_iam @aws_cognito_user_pools
+  listMediaComments(filter: ModelMediaCommentFilterInput, limit: Int, nextToken: String): ModelMediaCommentConnection @aws_iam @aws_cognito_user_pools
+  getJournalEntry(id: ID!): JournalEntry @aws_iam @aws_cognito_user_pools
+  listJournalEntries(filter: ModelJournalEntryFilterInput, limit: Int, nextToken: String): ModelJournalEntryConnection @aws_iam @aws_cognito_user_pools
+  getCalendarEvent(id: ID!): CalendarEvent @aws_iam @aws_cognito_user_pools
+  listCalendarEvents(filter: ModelCalendarEventFilterInput, limit: Int, nextToken: String): ModelCalendarEventConnection @aws_iam @aws_cognito_user_pools
+  getUserStats(id: ID!): UserStats @aws_iam @aws_cognito_user_pools
+  listUserStats(filter: ModelUserStatsFilterInput, limit: Int, nextToken: String): ModelUserStatsConnection @aws_iam @aws_cognito_user_pools
+}
+
+input ModelUserConditionInput {
+  username: ModelStringInput
+  email: ModelStringInput
+  fishEmoji: ModelStringInput
+  mood: ModelStringInput
+  isOnline: ModelBooleanInput
+  lastSeen: ModelStringInput
+  and: [ModelUserConditionInput]
+  or: [ModelUserConditionInput]
+  not: ModelUserConditionInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  owner: ModelStringInput
+}
+
+input CreateUserInput {
+  username: String!
+  email: String!
+  fishEmoji: String
+  mood: String
+  isOnline: Boolean
+  lastSeen: AWSDateTime
+  id: ID
+}
+
+input UpdateUserInput {
+  username: String
+  email: String
+  fishEmoji: String
+  mood: String
+  isOnline: Boolean
+  lastSeen: AWSDateTime
+  id: ID!
+}
+
+input DeleteUserInput {
+  id: ID!
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!, condition: ModelUserConditionInput): User @aws_iam @aws_cognito_user_pools
+  updateUser(input: UpdateUserInput!, condition: ModelUserConditionInput): User @aws_iam @aws_cognito_user_pools
+  deleteUser(input: DeleteUserInput!, condition: ModelUserConditionInput): User @aws_iam @aws_cognito_user_pools
+  createMessage(input: CreateMessageInput!, condition: ModelMessageConditionInput): Message @aws_iam @aws_cognito_user_pools
+  updateMessage(input: UpdateMessageInput!, condition: ModelMessageConditionInput): Message @aws_iam @aws_cognito_user_pools
+  deleteMessage(input: DeleteMessageInput!, condition: ModelMessageConditionInput): Message @aws_iam @aws_cognito_user_pools
+  createMood(input: CreateMoodInput!, condition: ModelMoodConditionInput): Mood @aws_iam @aws_cognito_user_pools
+  updateMood(input: UpdateMoodInput!, condition: ModelMoodConditionInput): Mood @aws_iam @aws_cognito_user_pools
+  deleteMood(input: DeleteMoodInput!, condition: ModelMoodConditionInput): Mood @aws_iam @aws_cognito_user_pools
+  createPrompt(input: CreatePromptInput!, condition: ModelPromptConditionInput): Prompt @aws_iam @aws_cognito_user_pools
+  updatePrompt(input: UpdatePromptInput!, condition: ModelPromptConditionInput): Prompt @aws_iam @aws_cognito_user_pools
+  deletePrompt(input: DeletePromptInput!, condition: ModelPromptConditionInput): Prompt @aws_iam @aws_cognito_user_pools
+  createPromptResponse(input: CreatePromptResponseInput!, condition: ModelPromptResponseConditionInput): PromptResponse @aws_iam @aws_cognito_user_pools
+  updatePromptResponse(input: UpdatePromptResponseInput!, condition: ModelPromptResponseConditionInput): PromptResponse @aws_iam @aws_cognito_user_pools
+  deletePromptResponse(input: DeletePromptResponseInput!, condition: ModelPromptResponseConditionInput): PromptResponse @aws_iam @aws_cognito_user_pools
+  createMediaPost(input: CreateMediaPostInput!, condition: ModelMediaPostConditionInput): MediaPost @aws_iam @aws_cognito_user_pools
+  updateMediaPost(input: UpdateMediaPostInput!, condition: ModelMediaPostConditionInput): MediaPost @aws_iam @aws_cognito_user_pools
+  deleteMediaPost(input: DeleteMediaPostInput!, condition: ModelMediaPostConditionInput): MediaPost @aws_iam @aws_cognito_user_pools
+  createMediaComment(input: CreateMediaCommentInput!, condition: ModelMediaCommentConditionInput): MediaComment @aws_iam @aws_cognito_user_pools
+  updateMediaComment(input: UpdateMediaCommentInput!, condition: ModelMediaCommentConditionInput): MediaComment @aws_iam @aws_cognito_user_pools
+  deleteMediaComment(input: DeleteMediaCommentInput!, condition: ModelMediaCommentConditionInput): MediaComment @aws_iam @aws_cognito_user_pools
+  createJournalEntry(input: CreateJournalEntryInput!, condition: ModelJournalEntryConditionInput): JournalEntry @aws_iam @aws_cognito_user_pools
+  updateJournalEntry(input: UpdateJournalEntryInput!, condition: ModelJournalEntryConditionInput): JournalEntry @aws_iam @aws_cognito_user_pools
+  deleteJournalEntry(input: DeleteJournalEntryInput!, condition: ModelJournalEntryConditionInput): JournalEntry @aws_iam @aws_cognito_user_pools
+  createCalendarEvent(input: CreateCalendarEventInput!, condition: ModelCalendarEventConditionInput): CalendarEvent @aws_iam @aws_cognito_user_pools
+  updateCalendarEvent(input: UpdateCalendarEventInput!, condition: ModelCalendarEventConditionInput): CalendarEvent @aws_iam @aws_cognito_user_pools
+  deleteCalendarEvent(input: DeleteCalendarEventInput!, condition: ModelCalendarEventConditionInput): CalendarEvent @aws_iam @aws_cognito_user_pools
+  createUserStats(input: CreateUserStatsInput!, condition: ModelUserStatsConditionInput): UserStats @aws_iam @aws_cognito_user_pools
+  updateUserStats(input: UpdateUserStatsInput!, condition: ModelUserStatsConditionInput): UserStats @aws_iam @aws_cognito_user_pools
+  deleteUserStats(input: DeleteUserStatsInput!, condition: ModelUserStatsConditionInput): UserStats @aws_iam @aws_cognito_user_pools
+}
+
+input ModelSubscriptionUserFilterInput {
+  username: ModelSubscriptionStringInput
+  email: ModelSubscriptionStringInput
+  fishEmoji: ModelSubscriptionStringInput
+  mood: ModelSubscriptionStringInput
+  isOnline: ModelSubscriptionBooleanInput
+  lastSeen: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  createdAt: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+  and: [ModelSubscriptionUserFilterInput]
+  or: [ModelSubscriptionUserFilterInput]
+  owner: ModelStringInput
+}
+
+type Subscription {
+  onCreateUser(filter: ModelSubscriptionUserFilterInput, owner: String): User @aws_subscribe(mutations: ["createUser"]) @aws_iam @aws_cognito_user_pools
+  onUpdateUser(filter: ModelSubscriptionUserFilterInput, owner: String): User @aws_subscribe(mutations: ["updateUser"]) @aws_iam @aws_cognito_user_pools
+  onDeleteUser(filter: ModelSubscriptionUserFilterInput, owner: String): User @aws_subscribe(mutations: ["deleteUser"]) @aws_iam @aws_cognito_user_pools
+  onCreateMessage(filter: ModelSubscriptionMessageFilterInput): Message @aws_subscribe(mutations: ["createMessage"]) @aws_iam @aws_cognito_user_pools
+  onUpdateMessage(filter: ModelSubscriptionMessageFilterInput): Message @aws_subscribe(mutations: ["updateMessage"]) @aws_iam @aws_cognito_user_pools
+  onDeleteMessage(filter: ModelSubscriptionMessageFilterInput): Message @aws_subscribe(mutations: ["deleteMessage"]) @aws_iam @aws_cognito_user_pools
+  onCreateMood(filter: ModelSubscriptionMoodFilterInput): Mood @aws_subscribe(mutations: ["createMood"]) @aws_iam @aws_cognito_user_pools
+  onUpdateMood(filter: ModelSubscriptionMoodFilterInput): Mood @aws_subscribe(mutations: ["updateMood"]) @aws_iam @aws_cognito_user_pools
+  onDeleteMood(filter: ModelSubscriptionMoodFilterInput): Mood @aws_subscribe(mutations: ["deleteMood"]) @aws_iam @aws_cognito_user_pools
+  onCreatePrompt(filter: ModelSubscriptionPromptFilterInput): Prompt @aws_subscribe(mutations: ["createPrompt"]) @aws_iam @aws_cognito_user_pools
+  onUpdatePrompt(filter: ModelSubscriptionPromptFilterInput): Prompt @aws_subscribe(mutations: ["updatePrompt"]) @aws_iam @aws_cognito_user_pools
+  onDeletePrompt(filter: ModelSubscriptionPromptFilterInput): Prompt @aws_subscribe(mutations: ["deletePrompt"]) @aws_iam @aws_cognito_user_pools
+  onCreatePromptResponse(filter: ModelSubscriptionPromptResponseFilterInput): PromptResponse @aws_subscribe(mutations: ["createPromptResponse"]) @aws_iam @aws_cognito_user_pools
+  onUpdatePromptResponse(filter: ModelSubscriptionPromptResponseFilterInput): PromptResponse @aws_subscribe(mutations: ["updatePromptResponse"]) @aws_iam @aws_cognito_user_pools
+  onDeletePromptResponse(filter: ModelSubscriptionPromptResponseFilterInput): PromptResponse @aws_subscribe(mutations: ["deletePromptResponse"]) @aws_iam @aws_cognito_user_pools
+  onCreateMediaPost(filter: ModelSubscriptionMediaPostFilterInput): MediaPost @aws_subscribe(mutations: ["createMediaPost"]) @aws_iam @aws_cognito_user_pools
+  onUpdateMediaPost(filter: ModelSubscriptionMediaPostFilterInput): MediaPost @aws_subscribe(mutations: ["updateMediaPost"]) @aws_iam @aws_cognito_user_pools
+  onDeleteMediaPost(filter: ModelSubscriptionMediaPostFilterInput): MediaPost @aws_subscribe(mutations: ["deleteMediaPost"]) @aws_iam @aws_cognito_user_pools
+  onCreateMediaComment(filter: ModelSubscriptionMediaCommentFilterInput): MediaComment @aws_subscribe(mutations: ["createMediaComment"]) @aws_iam @aws_cognito_user_pools
+  onUpdateMediaComment(filter: ModelSubscriptionMediaCommentFilterInput): MediaComment @aws_subscribe(mutations: ["updateMediaComment"]) @aws_iam @aws_cognito_user_pools
+  onDeleteMediaComment(filter: ModelSubscriptionMediaCommentFilterInput): MediaComment @aws_subscribe(mutations: ["deleteMediaComment"]) @aws_iam @aws_cognito_user_pools
+  onCreateJournalEntry(filter: ModelSubscriptionJournalEntryFilterInput, owner: String): JournalEntry @aws_subscribe(mutations: ["createJournalEntry"]) @aws_iam @aws_cognito_user_pools
+  onUpdateJournalEntry(filter: ModelSubscriptionJournalEntryFilterInput, owner: String): JournalEntry @aws_subscribe(mutations: ["updateJournalEntry"]) @aws_iam @aws_cognito_user_pools
+  onDeleteJournalEntry(filter: ModelSubscriptionJournalEntryFilterInput, owner: String): JournalEntry @aws_subscribe(mutations: ["deleteJournalEntry"]) @aws_iam @aws_cognito_user_pools
+  onCreateCalendarEvent(filter: ModelSubscriptionCalendarEventFilterInput): CalendarEvent @aws_subscribe(mutations: ["createCalendarEvent"]) @aws_iam @aws_cognito_user_pools
+  onUpdateCalendarEvent(filter: ModelSubscriptionCalendarEventFilterInput): CalendarEvent @aws_subscribe(mutations: ["updateCalendarEvent"]) @aws_iam @aws_cognito_user_pools
+  onDeleteCalendarEvent(filter: ModelSubscriptionCalendarEventFilterInput): CalendarEvent @aws_subscribe(mutations: ["deleteCalendarEvent"]) @aws_iam @aws_cognito_user_pools
+  onCreateUserStats(filter: ModelSubscriptionUserStatsFilterInput, owner: String): UserStats @aws_subscribe(mutations: ["createUserStats"]) @aws_iam @aws_cognito_user_pools
+  onUpdateUserStats(filter: ModelSubscriptionUserStatsFilterInput, owner: String): UserStats @aws_subscribe(mutations: ["updateUserStats"]) @aws_iam @aws_cognito_user_pools
+  onDeleteUserStats(filter: ModelSubscriptionUserStatsFilterInput, owner: String): UserStats @aws_subscribe(mutations: ["deleteUserStats"]) @aws_iam @aws_cognito_user_pools
+}
+
+type ModelMessageConnection @aws_iam @aws_cognito_user_pools {
+  items: [Message]!
+  nextToken: String
+}
+
+input ModelMessageFilterInput {
+  content: ModelStringInput
+  senderId: ModelIDInput
+  senderUsername: ModelStringInput
+  senderFishEmoji: ModelStringInput
+  mediaUrl: ModelStringInput
+  mediaType: ModelStringInput
+  createdAt: ModelStringInput
+  id: ModelIDInput
+  updatedAt: ModelStringInput
+  and: [ModelMessageFilterInput]
+  or: [ModelMessageFilterInput]
+  not: ModelMessageFilterInput
+}
+
+input ModelMessageConditionInput {
+  content: ModelStringInput
+  senderId: ModelIDInput
+  senderUsername: ModelStringInput
+  senderFishEmoji: ModelStringInput
+  mediaUrl: ModelStringInput
+  mediaType: ModelStringInput
+  createdAt: ModelStringInput
+  and: [ModelMessageConditionInput]
+  or: [ModelMessageConditionInput]
+  not: ModelMessageConditionInput
+  updatedAt: ModelStringInput
+}
+
+input CreateMessageInput {
+  content: String!
+  senderId: ID!
+  senderUsername: String!
+  senderFishEmoji: String
+  mediaUrl: String
+  mediaType: String
+  createdAt: AWSDateTime
+  id: ID
+}
+
+input UpdateMessageInput {
+  content: String
+  senderId: ID
+  senderUsername: String
+  senderFishEmoji: String
+  mediaUrl: String
+  mediaType: String
+  createdAt: AWSDateTime
+  id: ID!
+}
+
+input DeleteMessageInput {
+  id: ID!
+}
+
+input ModelSubscriptionMessageFilterInput {
+  content: ModelSubscriptionStringInput
+  senderId: ModelSubscriptionIDInput
+  senderUsername: ModelSubscriptionStringInput
+  senderFishEmoji: ModelSubscriptionStringInput
+  mediaUrl: ModelSubscriptionStringInput
+  mediaType: ModelSubscriptionStringInput
+  createdAt: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  updatedAt: ModelSubscriptionStringInput
+  and: [ModelSubscriptionMessageFilterInput]
+  or: [ModelSubscriptionMessageFilterInput]
+}
+
+type ModelMoodConnection @aws_iam @aws_cognito_user_pools {
+  items: [Mood]!
+  nextToken: String
+}
+
+input ModelMoodFilterInput {
+  userId: ModelIDInput
+  username: ModelStringInput
+  fishEmoji: ModelStringInput
+  moodText: ModelStringInput
+  createdAt: ModelStringInput
+  id: ModelIDInput
+  updatedAt: ModelStringInput
+  and: [ModelMoodFilterInput]
+  or: [ModelMoodFilterInput]
+  not: ModelMoodFilterInput
+}
+
+input ModelMoodConditionInput {
+  userId: ModelIDInput
+  username: ModelStringInput
+  fishEmoji: ModelStringInput
+  moodText: ModelStringInput
+  createdAt: ModelStringInput
+  and: [ModelMoodConditionInput]
+  or: [ModelMoodConditionInput]
+  not: ModelMoodConditionInput
+  updatedAt: ModelStringInput
+}
+
+input CreateMoodInput {
+  userId: ID!
+  username: String!
+  fishEmoji: String
+  moodText: String!
+  createdAt: AWSDateTime
+  id: ID
+}
+
+input UpdateMoodInput {
+  userId: ID
+  username: String
+  fishEmoji: String
+  moodText: String
+  createdAt: AWSDateTime
+  id: ID!
+}
+
+input DeleteMoodInput {
+  id: ID!
+}
+
+input ModelSubscriptionMoodFilterInput {
+  userId: ModelSubscriptionIDInput
+  username: ModelSubscriptionStringInput
+  fishEmoji: ModelSubscriptionStringInput
+  moodText: ModelSubscriptionStringInput
+  createdAt: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  updatedAt: ModelSubscriptionStringInput
+  and: [ModelSubscriptionMoodFilterInput]
+  or: [ModelSubscriptionMoodFilterInput]
+}
+
+type ModelPromptConnection @aws_iam @aws_cognito_user_pools {
+  items: [Prompt]!
+  nextToken: String
+}
+
+input ModelPromptFilterInput {
+  promptText: ModelStringInput
+  date: ModelStringInput
+  id: ModelIDInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  and: [ModelPromptFilterInput]
+  or: [ModelPromptFilterInput]
+  not: ModelPromptFilterInput
+}
+
+input ModelPromptConditionInput {
+  promptText: ModelStringInput
+  date: ModelStringInput
+  and: [ModelPromptConditionInput]
+  or: [ModelPromptConditionInput]
+  not: ModelPromptConditionInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+}
+
+input CreatePromptInput {
+  promptText: String!
+  date: AWSDate!
+  id: ID
+}
+
+input UpdatePromptInput {
+  promptText: String
+  date: AWSDate
+  id: ID!
+}
+
+input DeletePromptInput {
+  id: ID!
+}
+
+input ModelSubscriptionPromptFilterInput {
+  promptText: ModelSubscriptionStringInput
+  date: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  createdAt: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+  and: [ModelSubscriptionPromptFilterInput]
+  or: [ModelSubscriptionPromptFilterInput]
+}
+
+type ModelPromptResponseConnection @aws_iam @aws_cognito_user_pools {
+  items: [PromptResponse]!
+  nextToken: String
+}
+
+input ModelPromptResponseFilterInput {
+  promptId: ModelIDInput
+  userId: ModelIDInput
+  username: ModelStringInput
+  responseText: ModelStringInput
+  createdAt: ModelStringInput
+  expiresAt: ModelStringInput
+  id: ModelIDInput
+  updatedAt: ModelStringInput
+  and: [ModelPromptResponseFilterInput]
+  or: [ModelPromptResponseFilterInput]
+  not: ModelPromptResponseFilterInput
+  owner: ModelStringInput
+}
+
+input ModelPromptResponseConditionInput {
+  promptId: ModelIDInput
+  userId: ModelIDInput
+  username: ModelStringInput
+  responseText: ModelStringInput
+  createdAt: ModelStringInput
+  expiresAt: ModelStringInput
+  and: [ModelPromptResponseConditionInput]
+  or: [ModelPromptResponseConditionInput]
+  not: ModelPromptResponseConditionInput
+  updatedAt: ModelStringInput
+  owner: ModelStringInput
+}
+
+input CreatePromptResponseInput {
+  promptId: ID!
+  userId: ID!
+  username: String!
+  responseText: String!
+  createdAt: AWSDateTime
+  expiresAt: AWSDateTime
+  id: ID
+}
+
+input UpdatePromptResponseInput {
+  promptId: ID
+  userId: ID
+  username: String
+  responseText: String
+  createdAt: AWSDateTime
+  expiresAt: AWSDateTime
+  id: ID!
+}
+
+input DeletePromptResponseInput {
+  id: ID!
+}
+
+input ModelSubscriptionPromptResponseFilterInput {
+  promptId: ModelSubscriptionIDInput
+  userId: ModelSubscriptionIDInput
+  username: ModelSubscriptionStringInput
+  responseText: ModelSubscriptionStringInput
+  createdAt: ModelSubscriptionStringInput
+  expiresAt: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  updatedAt: ModelSubscriptionStringInput
+  and: [ModelSubscriptionPromptResponseFilterInput]
+  or: [ModelSubscriptionPromptResponseFilterInput]
+  owner: ModelStringInput
+}
+
+type ModelMediaPostConnection @aws_iam @aws_cognito_user_pools {
+  items: [MediaPost]!
+  nextToken: String
+}
+
+input ModelMediaPostFilterInput {
+  userId: ModelIDInput
+  username: ModelStringInput
+  fishEmoji: ModelStringInput
+  mediaUrl: ModelStringInput
+  mediaType: ModelStringInput
+  caption: ModelStringInput
+  createdAt: ModelStringInput
+  id: ModelIDInput
+  updatedAt: ModelStringInput
+  and: [ModelMediaPostFilterInput]
+  or: [ModelMediaPostFilterInput]
+  not: ModelMediaPostFilterInput
+  owner: ModelStringInput
+}
+
+input ModelMediaPostConditionInput {
+  userId: ModelIDInput
+  username: ModelStringInput
+  fishEmoji: ModelStringInput
+  mediaUrl: ModelStringInput
+  mediaType: ModelStringInput
+  caption: ModelStringInput
+  createdAt: ModelStringInput
+  and: [ModelMediaPostConditionInput]
+  or: [ModelMediaPostConditionInput]
+  not: ModelMediaPostConditionInput
+  updatedAt: ModelStringInput
+  owner: ModelStringInput
+}
+
+input CreateMediaPostInput {
+  userId: ID!
+  username: String!
+  fishEmoji: String
+  mediaUrl: String!
+  mediaType: String!
+  caption: String
+  createdAt: AWSDateTime
+  id: ID
+}
+
+input UpdateMediaPostInput {
+  userId: ID
+  username: String
+  fishEmoji: String
+  mediaUrl: String
+  mediaType: String
+  caption: String
+  createdAt: AWSDateTime
+  id: ID!
+}
+
+input DeleteMediaPostInput {
+  id: ID!
+}
+
+input ModelSubscriptionMediaPostFilterInput {
+  userId: ModelSubscriptionIDInput
+  username: ModelSubscriptionStringInput
+  fishEmoji: ModelSubscriptionStringInput
+  mediaUrl: ModelSubscriptionStringInput
+  mediaType: ModelSubscriptionStringInput
+  caption: ModelSubscriptionStringInput
+  createdAt: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  updatedAt: ModelSubscriptionStringInput
+  and: [ModelSubscriptionMediaPostFilterInput]
+  or: [ModelSubscriptionMediaPostFilterInput]
+  owner: ModelStringInput
+}
+
+type ModelMediaCommentConnection @aws_iam @aws_cognito_user_pools {
+  items: [MediaComment]!
+  nextToken: String
+}
+
+input ModelMediaCommentFilterInput {
+  mediaPostId: ModelIDInput
+  userId: ModelIDInput
+  username: ModelStringInput
+  commentText: ModelStringInput
+  createdAt: ModelStringInput
+  id: ModelIDInput
+  updatedAt: ModelStringInput
+  and: [ModelMediaCommentFilterInput]
+  or: [ModelMediaCommentFilterInput]
+  not: ModelMediaCommentFilterInput
+  owner: ModelStringInput
+}
+
+input ModelMediaCommentConditionInput {
+  mediaPostId: ModelIDInput
+  userId: ModelIDInput
+  username: ModelStringInput
+  commentText: ModelStringInput
+  createdAt: ModelStringInput
+  and: [ModelMediaCommentConditionInput]
+  or: [ModelMediaCommentConditionInput]
+  not: ModelMediaCommentConditionInput
+  updatedAt: ModelStringInput
+  owner: ModelStringInput
+}
+
+input CreateMediaCommentInput {
+  mediaPostId: ID!
+  userId: ID!
+  username: String!
+  commentText: String!
+  createdAt: AWSDateTime
+  id: ID
+}
+
+input UpdateMediaCommentInput {
+  mediaPostId: ID
+  userId: ID
+  username: String
+  commentText: String
+  createdAt: AWSDateTime
+  id: ID!
+}
+
+input DeleteMediaCommentInput {
+  id: ID!
+}
+
+input ModelSubscriptionMediaCommentFilterInput {
+  mediaPostId: ModelSubscriptionIDInput
+  userId: ModelSubscriptionIDInput
+  username: ModelSubscriptionStringInput
+  commentText: ModelSubscriptionStringInput
+  createdAt: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  updatedAt: ModelSubscriptionStringInput
+  and: [ModelSubscriptionMediaCommentFilterInput]
+  or: [ModelSubscriptionMediaCommentFilterInput]
+  owner: ModelStringInput
+}
+
+type ModelJournalEntryConnection @aws_iam @aws_cognito_user_pools {
+  items: [JournalEntry]!
+  nextToken: String
+}
+
+input ModelJournalEntryFilterInput {
+  userId: ModelIDInput
+  title: ModelStringInput
+  content: ModelStringInput
+  tags: ModelStringInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  id: ModelIDInput
+  and: [ModelJournalEntryFilterInput]
+  or: [ModelJournalEntryFilterInput]
+  not: ModelJournalEntryFilterInput
+  owner: ModelStringInput
+}
+
+input ModelJournalEntryConditionInput {
+  userId: ModelIDInput
+  title: ModelStringInput
+  content: ModelStringInput
+  tags: ModelStringInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  and: [ModelJournalEntryConditionInput]
+  or: [ModelJournalEntryConditionInput]
+  not: ModelJournalEntryConditionInput
+  owner: ModelStringInput
+}
+
+input CreateJournalEntryInput {
+  userId: ID!
+  title: String
+  content: String!
+  tags: [String]
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+  id: ID
+}
+
+input UpdateJournalEntryInput {
+  userId: ID
+  title: String
+  content: String
+  tags: [String]
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+  id: ID!
+}
+
+input DeleteJournalEntryInput {
+  id: ID!
+}
+
+input ModelSubscriptionJournalEntryFilterInput {
+  userId: ModelSubscriptionIDInput
+  title: ModelSubscriptionStringInput
+  content: ModelSubscriptionStringInput
+  tags: ModelSubscriptionStringInput
+  createdAt: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  and: [ModelSubscriptionJournalEntryFilterInput]
+  or: [ModelSubscriptionJournalEntryFilterInput]
+  owner: ModelStringInput
+}
+
+type ModelCalendarEventConnection @aws_iam @aws_cognito_user_pools {
+  items: [CalendarEvent]!
+  nextToken: String
+}
+
+input ModelCalendarEventFilterInput {
+  title: ModelStringInput
+  description: ModelStringInput
+  eventDate: ModelStringInput
+  eventTime: ModelStringInput
+  createdBy: ModelIDInput
+  createdByUsername: ModelStringInput
+  taggedUsers: ModelIDInput
+  reminderSent: ModelBooleanInput
+  id: ModelIDInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  and: [ModelCalendarEventFilterInput]
+  or: [ModelCalendarEventFilterInput]
+  not: ModelCalendarEventFilterInput
+  owner: ModelStringInput
+}
+
+input ModelCalendarEventConditionInput {
+  title: ModelStringInput
+  description: ModelStringInput
+  eventDate: ModelStringInput
+  eventTime: ModelStringInput
+  createdBy: ModelIDInput
+  createdByUsername: ModelStringInput
+  taggedUsers: ModelIDInput
+  reminderSent: ModelBooleanInput
+  and: [ModelCalendarEventConditionInput]
+  or: [ModelCalendarEventConditionInput]
+  not: ModelCalendarEventConditionInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  owner: ModelStringInput
+}
+
+input CreateCalendarEventInput {
+  title: String!
+  description: String
+  eventDate: AWSDate!
+  eventTime: AWSTime
+  createdBy: ID!
+  createdByUsername: String!
+  taggedUsers: [ID]
+  reminderSent: Boolean
+  id: ID
+}
+
+input UpdateCalendarEventInput {
+  title: String
+  description: String
+  eventDate: AWSDate
+  eventTime: AWSTime
+  createdBy: ID
+  createdByUsername: String
+  taggedUsers: [ID]
+  reminderSent: Boolean
+  id: ID!
+}
+
+input DeleteCalendarEventInput {
+  id: ID!
+}
+
+input ModelSubscriptionCalendarEventFilterInput {
+  title: ModelSubscriptionStringInput
+  description: ModelSubscriptionStringInput
+  eventDate: ModelSubscriptionStringInput
+  eventTime: ModelSubscriptionStringInput
+  createdBy: ModelSubscriptionIDInput
+  createdByUsername: ModelSubscriptionStringInput
+  taggedUsers: ModelSubscriptionIDInput
+  reminderSent: ModelSubscriptionBooleanInput
+  id: ModelSubscriptionIDInput
+  createdAt: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+  and: [ModelSubscriptionCalendarEventFilterInput]
+  or: [ModelSubscriptionCalendarEventFilterInput]
+  owner: ModelStringInput
+}
+
+type ModelUserStatsConnection @aws_iam @aws_cognito_user_pools {
+  items: [UserStats]!
+  nextToken: String
+}
+
+input ModelUserStatsFilterInput {
+  userId: ModelIDInput
+  date: ModelStringInput
+  moodCheckIns: ModelIntInput
+  mediaShared: ModelIntInput
+  isActive: ModelBooleanInput
+  id: ModelIDInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  and: [ModelUserStatsFilterInput]
+  or: [ModelUserStatsFilterInput]
+  not: ModelUserStatsFilterInput
+  owner: ModelStringInput
+}
+
+input ModelUserStatsConditionInput {
+  userId: ModelIDInput
+  date: ModelStringInput
+  moodCheckIns: ModelIntInput
+  mediaShared: ModelIntInput
+  isActive: ModelBooleanInput
+  and: [ModelUserStatsConditionInput]
+  or: [ModelUserStatsConditionInput]
+  not: ModelUserStatsConditionInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  owner: ModelStringInput
+}
+
+input CreateUserStatsInput {
+  userId: ID!
+  date: AWSDate!
+  moodCheckIns: Int
+  mediaShared: Int
+  isActive: Boolean
+  id: ID
+}
+
+input UpdateUserStatsInput {
+  userId: ID
+  date: AWSDate
+  moodCheckIns: Int
+  mediaShared: Int
+  isActive: Boolean
+  id: ID!
+}
+
+input DeleteUserStatsInput {
+  id: ID!
+}
+
+input ModelSubscriptionUserStatsFilterInput {
+  userId: ModelSubscriptionIDInput
+  date: ModelSubscriptionStringInput
+  moodCheckIns: ModelSubscriptionIntInput
+  mediaShared: ModelSubscriptionIntInput
+  isActive: ModelSubscriptionBooleanInput
+  id: ModelSubscriptionIDInput
+  createdAt: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+  and: [ModelSubscriptionUserStatsFilterInput]
+  or: [ModelSubscriptionUserStatsFilterInput]
+  owner: ModelStringInput
+}

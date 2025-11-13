@@ -1,0 +1,893 @@
+{
+ "Resources": {
+  "Promptresponsesauth0FunctionPromptresponsesauth0FunctionAppSyncFunctionD164F519": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPINONEDSCD07B1E7Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "Promptresponsesauth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/5b2dd26ac19f6a54684f2769d465463159cc27a441d7ac8b8efafdec1b2370fd.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/Promptresponsesauth0Function/Promptresponsesauth0Function.AppSyncFunction"
+   }
+  },
+  "PromptResponsesDataResolverFnPromptResponsesDataResolverFnAppSyncFunctionDE9E0AEC": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptResponseNestedStackPromptResponseNestedStackResource345013A9Outputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptResponsePromptResponseDataSourceBB0B214DName"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "PromptResponsesDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/1ae458597bee37e438c835872654298b4058080ba35a541c6a8523ba710b6abe.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/49e7a1f2fb4c809b82bed6b0242a2a3bcfa2c5276ebd2539ff330fee36f8fe18.vtl"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/PromptResponsesDataResolverFn/PromptResponsesDataResolverFn.AppSyncFunction"
+   }
+  },
+  "PromptresponsesResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+    },
+    "FieldName": "responses",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "Promptresponsesauth0FunctionPromptresponsesauth0FunctionAppSyncFunctionD164F519",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "PromptResponsesDataResolverFnPromptResponsesDataResolverFnAppSyncFunctionDE9E0AEC",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"Prompt\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"responses\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"AMAZON_DYNAMODB\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n$util.qr($ctx.stash.put(\"tableName\", \"",
+       {
+        "Fn::Select": [
+         1,
+         {
+          "Fn::Split": [
+           "/",
+           {
+            "Fn::Select": [
+             5,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptResponseNestedStackPromptResponseNestedStackResource345013A9Outputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptResponsePromptResponseTable3D9221F4TableArn"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthauthenticatedUserRole782C840DRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthunauthenticatedUserRole82CDD945Ref"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthIdentityPool5D8E5F2CRef"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "Prompt"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/promptResponsesResolver"
+   }
+  },
+  "MediaPostcommentsauth0FunctionMediaPostcommentsauth0FunctionAppSyncFunctionF2504210": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPINONEDSCD07B1E7Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MediaPostcommentsauth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/5b2dd26ac19f6a54684f2769d465463159cc27a441d7ac8b8efafdec1b2370fd.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/MediaPostcommentsauth0Function/MediaPostcommentsauth0Function.AppSyncFunction"
+   }
+  },
+  "MediaPostCommentsDataResolverFnMediaPostCommentsDataResolverFnAppSyncFunction44784CBD": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaCommentNestedStackMediaCommentNestedStackResource71672674Outputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaCommentMediaCommentDataSource0B070258Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MediaPostCommentsDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/42fbe2ee5feaf3022d56ce3e4489379e249c74299b5293fff521d349df3fabd3.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/49e7a1f2fb4c809b82bed6b0242a2a3bcfa2c5276ebd2539ff330fee36f8fe18.vtl"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/MediaPostCommentsDataResolverFn/MediaPostCommentsDataResolverFn.AppSyncFunction"
+   }
+  },
+  "MediaPostcommentsResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+    },
+    "FieldName": "comments",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "MediaPostcommentsauth0FunctionMediaPostcommentsauth0FunctionAppSyncFunctionF2504210",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "MediaPostCommentsDataResolverFnMediaPostCommentsDataResolverFnAppSyncFunction44784CBD",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"MediaPost\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"comments\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"AMAZON_DYNAMODB\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n$util.qr($ctx.stash.put(\"tableName\", \"",
+       {
+        "Fn::Select": [
+         1,
+         {
+          "Fn::Split": [
+           "/",
+           {
+            "Fn::Select": [
+             5,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaCommentNestedStackMediaCommentNestedStackResource71672674Outputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaCommentMediaCommentTableC187486FTableArn"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthauthenticatedUserRole782C840DRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthunauthenticatedUserRole82CDD945Ref"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthIdentityPool5D8E5F2CRef"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "MediaPost"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/mediaPostCommentsResolver"
+   }
+  },
+  "PromptResponsepromptauth0FunctionPromptResponsepromptauth0FunctionAppSyncFunction092F59C9": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPINONEDSCD07B1E7Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "PromptResponsepromptauth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/5b2dd26ac19f6a54684f2769d465463159cc27a441d7ac8b8efafdec1b2370fd.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/PromptResponsepromptauth0Function/PromptResponsepromptauth0Function.AppSyncFunction"
+   }
+  },
+  "PromptResponsePromptDataResolverFnPromptResponsePromptDataResolverFnAppSyncFunctionC3386879": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptNestedStackPromptNestedStackResource966F375FOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptPromptDataSource101EB44AName"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "PromptResponsePromptDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/8c5ff62555754004ac9f6f44004d07b41541e77365aa722b327d083022594b32.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/dcb70e4856bc9a423e02b8b9e9c2ab3f71479784572d4c04a02d1f5b61a9f9ac.vtl"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/PromptResponsePromptDataResolverFn/PromptResponsePromptDataResolverFn.AppSyncFunction"
+   }
+  },
+  "PromptResponsepromptResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+    },
+    "FieldName": "prompt",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "PromptResponsepromptauth0FunctionPromptResponsepromptauth0FunctionAppSyncFunction092F59C9",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "PromptResponsePromptDataResolverFnPromptResponsePromptDataResolverFnAppSyncFunctionC3386879",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"PromptResponse\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"prompt\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"AMAZON_DYNAMODB\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n$util.qr($ctx.stash.put(\"tableName\", \"",
+       {
+        "Fn::Select": [
+         1,
+         {
+          "Fn::Split": [
+           "/",
+           {
+            "Fn::Select": [
+             5,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptNestedStackPromptNestedStackResource966F375FOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptPromptTable445043EFTableArn"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthauthenticatedUserRole782C840DRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthunauthenticatedUserRole82CDD945Ref"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthIdentityPool5D8E5F2CRef"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "PromptResponse"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/promptResponsePromptResolver"
+   }
+  },
+  "MediaCommentmediaPostauth0FunctionMediaCommentmediaPostauth0FunctionAppSyncFunction5D089256": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPINONEDSCD07B1E7Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MediaCommentmediaPostauth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/5b2dd26ac19f6a54684f2769d465463159cc27a441d7ac8b8efafdec1b2370fd.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/MediaCommentmediaPostauth0Function/MediaCommentmediaPostauth0Function.AppSyncFunction"
+   }
+  },
+  "MediaCommentMediaPostDataResolverFnMediaCommentMediaPostDataResolverFnAppSyncFunction27E72879": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaPostNestedStackMediaPostNestedStackResource6F6C3E85Outputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaPostMediaPostDataSource7D7EA3D5Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MediaCommentMediaPostDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/8a5bda6ca27c95068abcad319221937efca588a3b98792ddb9ed2bbdad3e16bd.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/dcb70e4856bc9a423e02b8b9e9c2ab3f71479784572d4c04a02d1f5b61a9f9ac.vtl"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/MediaCommentMediaPostDataResolverFn/MediaCommentMediaPostDataResolverFn.AppSyncFunction"
+   }
+  },
+  "MediaCommentmediaPostResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+    },
+    "FieldName": "mediaPost",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "MediaCommentmediaPostauth0FunctionMediaCommentmediaPostauth0FunctionAppSyncFunction5D089256",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "MediaCommentMediaPostDataResolverFnMediaCommentMediaPostDataResolverFnAppSyncFunction27E72879",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"MediaComment\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"mediaPost\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"AMAZON_DYNAMODB\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n$util.qr($ctx.stash.put(\"tableName\", \"",
+       {
+        "Fn::Select": [
+         1,
+         {
+          "Fn::Split": [
+           "/",
+           {
+            "Fn::Select": [
+             5,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaPostNestedStackMediaPostNestedStackResource6F6C3E85Outputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaPostMediaPostTable767855D4TableArn"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthauthenticatedUserRole782C840DRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthunauthenticatedUserRole82CDD945Ref"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthIdentityPool5D8E5F2CRef"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "MediaComment"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/mediaCommentMediaPostResolver"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/yXMQQ6CMBBA0bOwLyMWLyAkLl3AAchYBjKAU8K0EEO4u0FXL3/zLVibQ5bgpqlrx3TiF+xP0kBtHdCNBjdtds0bVKWgcD8xmkMR3UihQCWD86wfcbCXnTyiuMBeSi8d93HBM0zZSUXqp5WW4zC/Rx2wZ+kPI74lGPSy2htcr5AlgzKnS5TAb4Lq7xfajmGHpwAAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/data/amplifyData/ConnectionStack/CDKMetadata/Default"
+   },
+   "Condition": "CDKMetadataAvailable"
+  }
+ },
+ "Conditions": {
+  "CDKMetadataAvailable": {
+   "Fn::Or": [
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "af-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-3"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-4"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-northwest-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-2"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "il-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "sa-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-west-1"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Equals": [
+      {
+       "Ref": "AWS::Region"
+      },
+      "us-west-2"
+     ]
+    }
+   ]
+  }
+ },
+ "Parameters": {
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPI5E5F26EDApiId": {
+   "Type": "String"
+  },
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataGraphQLAPINONEDSCD07B1E7Name": {
+   "Type": "String"
+  },
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptResponseNestedStackPromptResponseNestedStackResource345013A9Outputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptResponsePromptResponseDataSourceBB0B214DName": {
+   "Type": "String"
+  },
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptResponseNestedStackPromptResponseNestedStackResource345013A9Outputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptResponsePromptResponseTable3D9221F4TableArn": {
+   "Type": "String"
+  },
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthauthenticatedUserRole782C840DRef": {
+   "Type": "String"
+  },
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthunauthenticatedUserRole82CDD945Ref": {
+   "Type": "String"
+  },
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bauthNestedStackauthNestedStackResourceDDE1ECAEOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bauthamplifyAuthIdentityPool5D8E5F2CRef": {
+   "Type": "String"
+  },
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaCommentNestedStackMediaCommentNestedStackResource71672674Outputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaCommentMediaCommentDataSource0B070258Name": {
+   "Type": "String"
+  },
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaCommentNestedStackMediaCommentNestedStackResource71672674Outputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaCommentMediaCommentTableC187486FTableArn": {
+   "Type": "String"
+  },
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptNestedStackPromptNestedStackResource966F375FOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptPromptDataSource101EB44AName": {
+   "Type": "String"
+  },
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptNestedStackPromptNestedStackResource966F375FOutputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataPromptPromptTable445043EFTableArn": {
+   "Type": "String"
+  },
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaPostNestedStackMediaPostNestedStackResource6F6C3E85Outputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaPostMediaPostDataSource7D7EA3D5Name": {
+   "Type": "String"
+  },
+  "referencetoamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaPostNestedStackMediaPostNestedStackResource6F6C3E85Outputsamplifyfishbowlfrontendprakasandbox1ca2d8565bdataamplifyDataMediaPostMediaPostTable767855D4TableArn": {
+   "Type": "String"
+  }
+ }
+}

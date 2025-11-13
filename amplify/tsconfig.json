@@ -4,13 +4,12 @@
     "module": "ES2020",
     "lib": ["ES2020"],
     "moduleResolution": "bundler",
-    "strict": true,
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "types": ["node"]
+    "isolatedModules": true
   },
   "include": ["./**/*.ts"],
   "exclude": ["node_modules"]

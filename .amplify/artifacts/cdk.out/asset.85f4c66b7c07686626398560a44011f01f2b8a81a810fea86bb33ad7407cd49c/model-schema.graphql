@@ -1,0 +1,105 @@
+type User @model @auth(rules: [{allow: private, operations: [read, update]},
+  {allow: owner, operations: [read, update, delete], ownerField: "owner"}])
+{
+  username: String!
+  email: String!
+  fishEmoji: String
+  mood: String
+  isOnline: Boolean
+  lastSeen: AWSDateTime
+}
+
+type Message @model @auth(rules: [{allow: private, operations: [read, create]}])
+{
+  content: String!
+  senderId: ID!
+  senderUsername: String!
+  senderFishEmoji: String
+  mediaUrl: String
+  mediaType: String
+  createdAt: AWSDateTime
+}
+
+type Mood @model @auth(rules: [{allow: private, operations: [read, create]}])
+{
+  userId: ID!
+  username: String!
+  fishEmoji: String
+  moodText: String!
+  createdAt: AWSDateTime
+}
+
+type Prompt @model @auth(rules: [{allow: private, operations: [read]}])
+{
+  promptText: String!
+  date: AWSDate!
+  responses: [PromptResponse] @hasMany(references: ["promptId"])
+}
+
+type PromptResponse @model @auth(rules: [{allow: private, operations: [read, create]},
+  {allow: owner, operations: [delete], ownerField: "owner"}])
+{
+  prompt: Prompt @belongsTo(references: ["promptId"])
+  promptId: ID!
+  userId: ID!
+  username: String!
+  responseText: String!
+  createdAt: AWSDateTime
+  expiresAt: AWSDateTime
+}
+
+type MediaPost @model @auth(rules: [{allow: private, operations: [read, create]},
+  {allow: owner, operations: [delete], ownerField: "owner"}])
+{
+  userId: ID!
+  username: String!
+  fishEmoji: String
+  mediaUrl: String!
+  mediaType: String!
+  caption: String
+  comments: [MediaComment] @hasMany(references: ["mediaPostId"])
+  createdAt: AWSDateTime
+}
+
+type MediaComment @model @auth(rules: [{allow: private, operations: [read, create]},
+  {allow: owner, operations: [delete], ownerField: "owner"}])
+{
+  mediaPost: MediaPost @belongsTo(references: ["mediaPostId"])
+  mediaPostId: ID!
+  userId: ID!
+  username: String!
+  commentText: String!
+  createdAt: AWSDateTime
+}
+
+type JournalEntry @model @auth(rules: [{allow: owner, operations: [read, create, update, delete], ownerField: "owner"}])
+{
+  userId: ID!
+  title: String
+  content: String!
+  tags: [String]
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type CalendarEvent @model @auth(rules: [{allow: private, operations: [read, create]},
+  {allow: owner, operations: [update, delete], ownerField: "owner"}])
+{
+  title: String!
+  description: String
+  eventDate: AWSDate!
+  eventTime: AWSTime
+  createdBy: ID!
+  createdByUsername: String!
+  taggedUsers: [ID]
+  reminderSent: Boolean
+}
+
+type UserStats @model @auth(rules: [{allow: owner, operations: [read, create, update], ownerField: "owner"}])
+{
+  userId: ID!
+  date: AWSDate!
+  moodCheckIns: Int
+  mediaShared: Int
+  isActive: Boolean
+}

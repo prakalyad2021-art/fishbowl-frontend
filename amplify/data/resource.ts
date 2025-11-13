@@ -16,7 +16,7 @@ const schema = a.schema({
       isOnline: a.boolean(),
       lastSeen: a.datetime(),
     })
-    .authorization((allow) => [
+    .authorization((allow: any) => [
       allow.authenticated().to(['read', 'update']),
       allow.owner().to(['read', 'update', 'delete']),
     ]),
@@ -53,12 +53,13 @@ const schema = a.schema({
       date: a.date().required(),
       responses: a.hasMany('PromptResponse', 'promptId'),
     })
-    .authorization((allow) => [
+    .authorization((allow: any) => [
       allow.authenticated().to(['read']),
     ]),
 
   PromptResponse: a
     .model({
+      prompt: a.belongsTo('Prompt', 'promptId'),
       promptId: a.id().required(),
       userId: a.id().required(),
       username: a.string().required(),
@@ -66,7 +67,7 @@ const schema = a.schema({
       createdAt: a.datetime(),
       expiresAt: a.datetime(), // 24 hours from creation
     })
-    .authorization((allow) => [
+    .authorization((allow: any) => [
       allow.authenticated().to(['read', 'create']),
       allow.owner().to(['delete']),
     ]),
@@ -89,13 +90,14 @@ const schema = a.schema({
 
   MediaComment: a
     .model({
+      mediaPost: a.belongsTo('MediaPost', 'mediaPostId'),
       mediaPostId: a.id().required(),
       userId: a.id().required(),
       username: a.string().required(),
       commentText: a.string().required(),
       createdAt: a.datetime(),
     })
-    .authorization((allow) => [
+    .authorization((allow: any) => [
       allow.authenticated().to(['read', 'create']),
       allow.owner().to(['delete']),
     ]),
