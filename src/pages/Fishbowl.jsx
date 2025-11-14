@@ -60,13 +60,25 @@ export default function Fishbowl({ user }) {
         // Always use the fishEmoji we determined (existing or new)
         const finalFishEmoji = userData?.fishEmoji || fishEmoji;
         
+        // Get the latest user data including mood from the database
+        const latestUser = await client.models.User.list({
+          filter: { userId: { eq: userId } },
+        });
+        const userMood = latestUser.data.length > 0 ? latestUser.data[0].mood : myMood;
+        
         setCurrentUser({ 
           id: userId, 
           userId: userId, // Add userId field for consistency
           username, 
           email,
-          fishEmoji: finalFishEmoji
+          fishEmoji: finalFishEmoji,
+          mood: userMood // Include mood from User model
         });
+        
+        // Update myMood state to match User model
+        if (userMood) {
+          setMyMood(userMood);
+        }
         await loadData();
         setLoading(false);
       } catch (error) {
@@ -87,9 +99,10 @@ export default function Fishbowl({ user }) {
           console.log("User subscription update:", data.items.length, "users");
           // Get ALL users (online and offline)
           const allUsersList = data.items;
-          // Get only online users for fish display
+          // Get only online users for fish display - STRICT check for true
           const online = allUsersList.filter((u) => u.isOnline === true);
-          console.log("Online users:", online.map(u => ({ userId: u.userId, username: u.username, fishEmoji: u.fishEmoji })));
+          console.log("Online users:", online.map(u => ({ userId: u.userId, username: u.username, fishEmoji: u.fishEmoji, isOnline: u.isOnline })));
+          console.log("Offline users:", allUsersList.filter(u => u.isOnline !== true).map(u => ({ userId: u.userId, username: u.username, isOnline: u.isOnline })));
           
           // Set ALL users (for friends list showing online/offline)
           setOnlineUsers(allUsersList);
@@ -98,8 +111,8 @@ export default function Fishbowl({ user }) {
           const positions = online.map((user, i) => {
             // Reuse existing position if fish already exists (to prevent jumping)
             const existing = fishPositions.find(f => (f.userId === (user?.userId || user?.id)));
-            // Use User model's mood field (most recent), fallback to Mood table
-            const userMood = user?.mood || userMoods[user?.userId || user?.id] || "(・∀・)";
+            // ALWAYS use User model's mood field (most recent) - this is the source of truth
+            const userMood = user?.mood || "(・∀・)";
             return {
               x: existing?.x || Math.random() * 80 + 10,
               y: existing?.y || Math.random() * 60 + 20,
@@ -108,7 +121,7 @@ export default function Fishbowl({ user }) {
               userId: user?.userId || user?.id,
               username: user?.username,
               fishEmoji: user?.fishEmoji || fishEmojis[i % fishEmojis.length], // Use stored fishEmoji
-              mood: userMood,
+              mood: userMood, // Use User model's mood field directly
             };
           });
           setFishPositions(positions);
@@ -225,12 +238,9 @@ export default function Fishbowl({ user }) {
         [currentUser.id]: myMood
       }));
 
-      // Also update fish positions to reflect mood change immediately
-      setFishPositions(prev => prev.map(fish => 
-        fish.userId === currentUser.id 
-          ? { ...fish, mood: myMood }
-          : fish
-      ));
+      // Reload data to get updated User model with new mood
+      // The subscription will pick up the change and update fish positions
+      await loadData();
 
       console.log("Mood updated successfully");
     } catch (error) {
@@ -333,8 +343,9 @@ export default function Fishbowl({ user }) {
             fishPositions
               .filter((fish) => fish.userId) // Only show users with IDs
               .map((fish, i) => {
-                // Use User model's mood field first (most recent), then fallback to Mood table
-                const moodText = fish.mood || userMoods[fish.userId] || "(・∀・)";
+                // ALWAYS use User model's mood field (from fish.mood) - this is the source of truth
+                // Don't use myMood state or userMoods for display - only use fish.mood from User model
+                const moodText = fish.mood || "(・∀・)";
                 return (
                   <div
                     key={fish.userId || `fish-${i}`}
@@ -366,7 +377,7 @@ export default function Fishbowl({ user }) {
                 );
               })
           ) : currentUser && currentUser.fishEmoji ? (
-            // Show current user even if no other users
+            // Show current user even if no other users - use User model mood, not myMood state
             <div
               className="absolute transition-all duration-500 ease-in-out flex flex-col items-center z-10"
               style={{
@@ -377,7 +388,7 @@ export default function Fishbowl({ user }) {
             >
               <div className="mb-1 relative">
                 <div className="px-3 py-1.5 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg border-2 border-blue-200 whitespace-nowrap">
-                  <span className="text-xs font-medium text-gray-800">💭 {myMood}</span>
+                  <span className="text-xs font-medium text-gray-800">💭 {currentUser.mood || myMood || "(・∀・)"}</span>
                 </div>
                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-white/90 border-r-2 border-b-2 border-blue-200 rotate-45"></div>
               </div>
@@ -471,9 +482,10 @@ export default function Fishbowl({ user }) {
                       <span className="text-2xl">{friend.fishEmoji || "🐠"}</span>
                       <div className="flex-1">
                         <span className="font-medium text-gray-900">@{friend.username || "user"}</span>
-                        {(userMoods[friendId] || friend.mood) && (
+                        {/* Use User model's mood field first (most recent), then fallback to Mood table */}
+                        {(friend.mood || userMoods[friendId]) && (
                           <p className="text-xs text-gray-600">
-                            {userMoods[friendId] || friend.mood}
+                            {friend.mood || userMoods[friendId]}
                           </p>
                         )}
                       </div>
