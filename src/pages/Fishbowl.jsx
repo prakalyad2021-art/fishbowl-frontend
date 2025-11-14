@@ -7,11 +7,12 @@ import { client } from "../utils/dataClient";
 
 export default function Fishbowl({ user }) {
   const [fishPositions, setFishPositions] = useState([]);
-  const [myMood, setMyMood] = useState(""); // Empty by default - no default mood
+  const [myMood, setMyMood] = useState(""); // Empty by default - COMPLETELY INDEPENDENT input field
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [userMoods, setUserMoods] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [inputInitialized, setInputInitialized] = useState(false); // Track if input has been initialized
 
   // Initialize user and fetch data
   useEffect(() => {
@@ -72,12 +73,13 @@ export default function Fishbowl({ user }) {
           username, 
           email,
           fishEmoji: finalFishEmoji,
-          mood: userMood // Include mood from User model
+          mood: userMood // Include mood from User model (for display only)
         });
         
-        // Set input field to user's mood (if exists), but don't force it
-        // User can type freely until they click "Update Mood"
-        setMyMood(userMood || "");
+        // DO NOT set input field from database - let user type freely
+        // Input field stays empty until user types and clicks "Update Mood"
+        // NEVER update myMood from database - it's completely user-controlled
+        setInputInitialized(true); // Mark that input is ready (but stays empty)
         await loadData();
         setLoading(false);
       } catch (error) {
@@ -152,7 +154,7 @@ export default function Fishbowl({ user }) {
       if (subscription) subscription.unsubscribe();
       if (moodSubscription) moodSubscription.unsubscribe();
     };
-  }, [user, currentUser, myMood]);
+  }, [user, currentUser]); // Removed myMood from dependencies - input field is independent
 
   const loadData = async () => {
     try {
@@ -175,7 +177,7 @@ export default function Fishbowl({ user }) {
             userId: user?.userId || user?.id,
             username: user?.username,
             fishEmoji: user?.fishEmoji || fishEmojis[i % fishEmojis.length], // Use stored fishEmoji
-            mood: user?.mood || "(・∀・)",
+            mood: user?.mood || "", // No default mood - empty if not set
           };
         });
         setFishPositions(positions);
@@ -189,7 +191,7 @@ export default function Fishbowl({ user }) {
           userId: currentUser.id || currentUser.userId,
           username: currentUser.username,
           fishEmoji: currentUser.fishEmoji,
-          mood: myMood,
+          mood: currentUser.mood || "", // Use currentUser.mood from database, not myMood state
         }]);
       }
 
@@ -244,12 +246,12 @@ export default function Fishbowl({ user }) {
       // Update local state to reflect mood change immediately
       setUserMoods(prev => ({
         ...prev,
-        [currentUser.id]: myMood
+        [currentUser.id]: myMood.trim() || ""
       }));
 
-      // Reload data to get updated User model with new mood
-      // The subscription will pick up the change and update fish positions
-      await loadData();
+      // The subscription will automatically pick up the User model change
+      // and update fish positions and friends list
+      // No need to reload - subscription handles it
 
       console.log("Mood updated successfully");
     } catch (error) {
@@ -445,7 +447,10 @@ export default function Fishbowl({ user }) {
               type="text"
               placeholder="Type your mood..."
               value={myMood}
-              onChange={(e) => setMyMood(e.target.value)}
+              onChange={(e) => {
+                // ONLY update when user types - nothing else can change this
+                setMyMood(e.target.value);
+              }}
               onKeyPress={(e) => e.key === "Enter" && handleUpdateMood()}
               className="px-4 py-2 rounded-full bg-white/60 backdrop-blur-sm text-sm text-center outline-none placeholder:text-gray-600 mb-3 w-full"
               style={{
