@@ -98,6 +98,8 @@ export default function Fishbowl({ user }) {
           const positions = online.map((user, i) => {
             // Reuse existing position if fish already exists (to prevent jumping)
             const existing = fishPositions.find(f => (f.userId === (user?.userId || user?.id)));
+            // Use User model's mood field (most recent), fallback to Mood table
+            const userMood = user?.mood || userMoods[user?.userId || user?.id] || "(・∀・)";
             return {
               x: existing?.x || Math.random() * 80 + 10,
               y: existing?.y || Math.random() * 60 + 20,
@@ -106,7 +108,7 @@ export default function Fishbowl({ user }) {
               userId: user?.userId || user?.id,
               username: user?.username,
               fishEmoji: user?.fishEmoji || fishEmojis[i % fishEmojis.length], // Use stored fishEmoji
-              mood: user?.mood || "(・∀・)",
+              mood: userMood,
             };
           });
           setFishPositions(positions);
@@ -223,6 +225,13 @@ export default function Fishbowl({ user }) {
         [currentUser.id]: myMood
       }));
 
+      // Also update fish positions to reflect mood change immediately
+      setFishPositions(prev => prev.map(fish => 
+        fish.userId === currentUser.id 
+          ? { ...fish, mood: myMood }
+          : fish
+      ));
+
       console.log("Mood updated successfully");
     } catch (error) {
       console.error("Error updating mood:", error);
@@ -324,7 +333,8 @@ export default function Fishbowl({ user }) {
             fishPositions
               .filter((fish) => fish.userId) // Only show users with IDs
               .map((fish, i) => {
-                const moodText = userMoods[fish.userId] || fish.mood || "(・∀・)";
+                // Use User model's mood field first (most recent), then fallback to Mood table
+                const moodText = fish.mood || userMoods[fish.userId] || "(・∀・)";
                 return (
                   <div
                     key={fish.userId || `fish-${i}`}

@@ -64,25 +64,48 @@ export default function Media({ user }) {
 
   const loadPosts = async () => {
     try {
+      console.log("Loading all posts...");
       const allPosts = await client.models.MediaPost.list({
         sortDirection: "DESC",
       });
-      // Load comments for each post
+      console.log("Found posts:", allPosts.data.length);
+      
+      // Load comments for each post and refresh media URLs if needed
       const postsWithComments = await Promise.all(
         allPosts.data.map(async (post) => {
           try {
             const comments = await client.models.MediaComment.list({
               filter: { mediaPostId: { eq: post.id } },
             });
-            return { ...post, comments: comments.data || [] };
+            
+            // If mediaUrl exists, ensure it's still accessible
+            let mediaUrl = post.mediaUrl;
+            if (mediaUrl && post.mediaType) {
+              // If URL is expired or from old path, try to get fresh URL
+              try {
+                const { getUrl } = await import('aws-amplify/storage');
+                // Extract key from URL if possible, or use the stored key
+                if (mediaUrl.includes('amazonaws.com') || mediaUrl.includes('amplifyapp.com')) {
+                  // Try to get fresh URL - but we need the key
+                  // For now, just use the existing URL
+                }
+              } catch (urlError) {
+                console.warn("Could not refresh URL for post:", post.id);
+              }
+            }
+            
+            return { ...post, comments: comments.data || [], mediaUrl };
           } catch (error) {
+            console.error("Error loading comments for post:", post.id, error);
             return { ...post, comments: [] };
           }
         })
       );
+      console.log("Loaded posts with comments:", postsWithComments.length);
       setPosts(postsWithComments);
     } catch (error) {
       console.error("Error loading posts:", error);
+      console.error("Error details:", error.message, error.errors);
     }
   };
 
@@ -152,15 +175,24 @@ export default function Media({ user }) {
     if (!confirm("Delete this post?")) return;
     try {
       console.log("Deleting post:", postId);
-      await client.models.MediaPost.delete({ id: postId });
-      // Wait a bit for the delete to propagate
+      console.log("Current user ID:", currentUser?.id);
+      console.log("Post to delete:", postId);
+      
+      const result = await client.models.MediaPost.delete({ id: postId });
+      console.log("Delete result:", result);
+      
+      // Immediately remove from local state
+      setPosts(prev => prev.filter(p => p.id !== postId));
+      
+      // Reload to ensure sync
       setTimeout(async () => {
         await loadPosts();
-      }, 500);
+      }, 300);
     } catch (error) {
       console.error("Error deleting:", error);
       console.error("Error details:", error.message, error.errors);
-      alert(`Failed to delete post: ${error.message || "Unknown error"}`);
+      console.error("Error stack:", error.stack);
+      alert(`Failed to delete post: ${error.message || "Unknown error"}\n\nCheck console for details.`);
     }
   };
 

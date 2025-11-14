@@ -95,17 +95,26 @@ export default function Calendar({ user }) {
     if (!confirm("Delete this event?")) return;
     try {
       console.log("Deleting event:", eventId);
-      await client.models.CalendarEvent.delete({ id: eventId });
+      console.log("Current user ID:", currentUser?.id);
+      
+      const result = await client.models.CalendarEvent.delete({ id: eventId });
+      console.log("Delete result:", result);
+      
+      // Immediately remove from local state
+      setEvents(prev => prev.filter(e => e.id !== eventId));
+      
       setShowEventDetails(false);
       setSelectedEvent(null);
-      // Wait a bit for the delete to propagate
+      
+      // Reload to ensure sync
       setTimeout(async () => {
         await loadEvents();
-      }, 500);
+      }, 300);
     } catch (error) {
       console.error("Error deleting event:", error);
       console.error("Error details:", error.message, error.errors);
-      alert(`Failed to delete event: ${error.message || "Unknown error"}`);
+      console.error("Error stack:", error.stack);
+      alert(`Failed to delete event: ${error.message || "Unknown error"}\n\nCheck console for details.`);
     }
   };
 
