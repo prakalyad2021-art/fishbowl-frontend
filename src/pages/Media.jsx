@@ -193,14 +193,15 @@ export default function Media({ user }) {
 
   // Real-time subscription
   useEffect(() => {
+    if (!currentUser) return;
     const subscription = client.models.MediaPost.observeQuery().subscribe({
       next: (data) => {
-        // Reload to get comments
+        // Reload to get comments and latest posts
         loadPosts();
       },
     });
     return () => subscription.unsubscribe();
-  }, []);
+  }, [currentUser]);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
