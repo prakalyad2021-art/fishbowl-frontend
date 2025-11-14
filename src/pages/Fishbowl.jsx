@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { getCurrentUser } from "aws-amplify/auth";
 import { dataHelpers } from "../utils/dataClient";
 import { client } from "../utils/dataClient";
@@ -12,7 +12,8 @@ export default function Fishbowl({ user }) {
   const [userMoods, setUserMoods] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [inputInitialized, setInputInitialized] = useState(false); // Track if input has been initialized
+  const inputRef = useRef(null); // Ref to track input field
+  const inputValueRef = useRef(""); // Ref to store input value independently
 
   // Initialize user and fetch data
   useEffect(() => {
@@ -79,7 +80,8 @@ export default function Fishbowl({ user }) {
         // DO NOT set input field from database - let user type freely
         // Input field stays empty until user types and clicks "Update Mood"
         // NEVER update myMood from database - it's completely user-controlled
-        setInputInitialized(true); // Mark that input is ready (but stays empty)
+        inputValueRef.current = ""; // Ensure input ref is empty
+        setMyMood(""); // Ensure state is empty
         await loadData();
         setLoading(false);
       } catch (error) {
@@ -212,42 +214,43 @@ export default function Fishbowl({ user }) {
       alert("Please log in");
       return;
     }
-    // Allow empty mood to clear it
-    // if (!myMood.trim()) {
-    //   alert("Please enter a mood");
-    //   return;
-    // }
-
+    
+    // Get the current input value from ref (most reliable)
+    const moodToSave = inputValueRef.current || myMood || "";
+    
     try {
-      console.log("Updating mood...", { userId: currentUser.id, mood: myMood });
+      console.log("Updating mood...", { userId: currentUser.id, mood: moodToSave });
       
       // Create mood entry
       await dataHelpers.updateMood(
         currentUser.id,
         currentUser.username,
         currentUser.fishEmoji || "🐡",
-        myMood
+        moodToSave
       );
 
       // Update user's current mood in User model (can be empty to clear mood)
       await dataHelpers.createOrUpdateUser(currentUser.id, {
         username: currentUser.username,
         email: currentUser.email,
-        mood: myMood.trim() || null, // Set to null if empty to clear mood
+        mood: moodToSave.trim() || null, // Set to null if empty to clear mood
         isOnline: true,
       });
       
       // Update currentUser state to reflect the new mood
       setCurrentUser(prev => ({
         ...prev,
-        mood: myMood.trim() || null
+        mood: moodToSave.trim() || null
       }));
 
       // Update local state to reflect mood change immediately
       setUserMoods(prev => ({
         ...prev,
-        [currentUser.id]: myMood.trim() || ""
+        [currentUser.id]: moodToSave.trim() || ""
       }));
+      
+      // DO NOT clear input field - let user keep typing if they want
+      // Input field stays as user typed it until they change it
 
       // The subscription will automatically pick up the User model change
       // and update fish positions and friends list
@@ -444,12 +447,15 @@ export default function Fishbowl({ user }) {
               @{currentUser?.username || "you"}
             </h2>
             <input
+              ref={inputRef}
               type="text"
               placeholder="Type your mood..."
               value={myMood}
               onChange={(e) => {
                 // ONLY update when user types - nothing else can change this
-                setMyMood(e.target.value);
+                const newValue = e.target.value;
+                inputValueRef.current = newValue; // Update ref
+                setMyMood(newValue); // Update state
               }}
               onKeyPress={(e) => e.key === "Enter" && handleUpdateMood()}
               className="px-4 py-2 rounded-full bg-white/60 backdrop-blur-sm text-sm text-center outline-none placeholder:text-gray-600 mb-3 w-full"
