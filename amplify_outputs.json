@@ -45,6 +45,13 @@
               "isRequired": true,
               "attributes": []
             },
+            "userId": {
+              "name": "userId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
             "username": {
               "name": "username",
               "isArray": false,
@@ -119,6 +126,7 @@
                     "allow": "private",
                     "operations": [
                       "read",
+                      "create",
                       "update"
                     ]
                   },
@@ -392,7 +400,8 @@
                   {
                     "allow": "private",
                     "operations": [
-                      "read"
+                      "read",
+                      "create"
                     ]
                   }
                 ]
@@ -1073,7 +1082,25 @@
           "media/*": {
             "authenticated": [
               "get",
-              "list"
+              "list",
+              "write",
+              "delete"
+            ]
+          },
+          "public/media/${cognito-identity.amazonaws.com:sub}/*": {
+            "entityidentity": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ]
+          },
+          "public/media/*": {
+            "authenticated": [
+              "get",
+              "list",
+              "write",
+              "delete"
             ]
           }
         }
