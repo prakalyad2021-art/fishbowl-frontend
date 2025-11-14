@@ -381,19 +381,23 @@ export default function Calendar({ user }) {
                       Tag Users (for reminders)
                     </label>
                     <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border border-gray-200 rounded-lg">
-                      {allUsers.map((u) => (
-                        <button
-                          key={u.id}
-                          onClick={() => toggleTagUser(u.id)}
-                          className={`px-3 py-1 rounded-full text-sm transition ${
-                            newEvent.taggedUsers.includes(u.id || u.userId)
-                              ? "bg-blue-500 text-white"
-                              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                          }`}
-                        >
-                          @{u.username}
-                        </button>
-                      ))}
+                      {allUsers.map((u) => {
+                        const userToTag = allUsers.find(usr => usr.id === u.id);
+                        const tagId = userToTag?.userId || u.id;
+                        return (
+                          <button
+                            key={u.id}
+                            onClick={() => toggleTagUser(u.id)}
+                            className={`px-3 py-1 rounded-full text-sm transition ${
+                              newEvent.taggedUsers.includes(tagId)
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            }`}
+                          >
+                            @{u.username}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
