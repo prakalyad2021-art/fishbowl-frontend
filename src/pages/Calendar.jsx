@@ -95,12 +95,13 @@ export default function Calendar({ user }) {
     if (!confirm("Delete this event?")) return;
     try {
       console.log("Deleting event:", eventId);
-      const result = await client.models.CalendarEvent.delete({ id: eventId });
-      console.log("Delete result:", result);
+      await client.models.CalendarEvent.delete({ id: eventId });
       setShowEventDetails(false);
       setSelectedEvent(null);
-      await loadEvents();
-      alert("Event deleted successfully");
+      // Wait a bit for the delete to propagate
+      setTimeout(async () => {
+        await loadEvents();
+      }, 500);
     } catch (error) {
       console.error("Error deleting event:", error);
       console.error("Error details:", error.message, error.errors);

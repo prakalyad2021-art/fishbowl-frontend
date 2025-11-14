@@ -152,10 +152,11 @@ export default function Media({ user }) {
     if (!confirm("Delete this post?")) return;
     try {
       console.log("Deleting post:", postId);
-      const result = await client.models.MediaPost.delete({ id: postId });
-      console.log("Delete result:", result);
-      await loadPosts();
-      alert("Post deleted successfully");
+      await client.models.MediaPost.delete({ id: postId });
+      // Wait a bit for the delete to propagate
+      setTimeout(async () => {
+        await loadPosts();
+      }, 500);
     } catch (error) {
       console.error("Error deleting:", error);
       console.error("Error details:", error.message, error.errors);

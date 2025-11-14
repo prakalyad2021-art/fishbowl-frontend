@@ -265,20 +265,36 @@
       {
        "Action": "s3:GetObject",
        "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          {
-           "Fn::GetAtt": [
-            "fishbowlMediaBucket557C18C6",
-            "Arn"
-           ]
-          },
-          "/media/*"
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "fishbowlMediaBucket557C18C6",
+             "Arn"
+            ]
+           },
+           "/media/*"
+          ]
          ]
-        ]
-       }
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "fishbowlMediaBucket557C18C6",
+             "Arn"
+            ]
+           },
+           "/public/media/*"
+          ]
+         ]
+        }
+       ]
       },
       {
        "Action": "s3:ListBucket",
@@ -286,7 +302,9 @@
         "StringLike": {
          "s3:prefix": [
           "media/*",
-          "media/"
+          "media/",
+          "public/media/*",
+          "public/media/"
          ]
         }
        },
@@ -301,38 +319,70 @@
       {
        "Action": "s3:PutObject",
        "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          {
-           "Fn::GetAtt": [
-            "fishbowlMediaBucket557C18C6",
-            "Arn"
-           ]
-          },
-          "/media/${cognito-identity.amazonaws.com:sub}/*"
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "fishbowlMediaBucket557C18C6",
+             "Arn"
+            ]
+           },
+           "/media/*"
+          ]
          ]
-        ]
-       }
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "fishbowlMediaBucket557C18C6",
+             "Arn"
+            ]
+           },
+           "/public/media/*"
+          ]
+         ]
+        }
+       ]
       },
       {
        "Action": "s3:DeleteObject",
        "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          {
-           "Fn::GetAtt": [
-            "fishbowlMediaBucket557C18C6",
-            "Arn"
-           ]
-          },
-          "/media/${cognito-identity.amazonaws.com:sub}/*"
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "fishbowlMediaBucket557C18C6",
+             "Arn"
+            ]
+           },
+           "/media/*"
+          ]
          ]
-        ]
-       }
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "fishbowlMediaBucket557C18C6",
+             "Arn"
+            ]
+           },
+           "/public/media/*"
+          ]
+         ]
+        }
+       ]
       }
      ],
      "Version": "2012-10-17"

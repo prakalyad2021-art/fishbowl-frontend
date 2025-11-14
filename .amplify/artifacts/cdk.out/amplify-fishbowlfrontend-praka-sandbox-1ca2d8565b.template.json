@@ -44,6 +44,12 @@
     "awsAppsyncAdditionalAuthenticationTypes"
    ]
   },
+  "AWS::Amplify::Function": {
+   "version": "1",
+   "stackOutputs": [
+    "definedFunctions"
+   ]
+  },
   "AWS::Amplify::Storage": {
    "version": "1",
    "stackOutputs": [
@@ -208,6 +214,23 @@
   "awsAppsyncAdditionalAuthenticationTypes": {
    "Value": "AWS_IAM"
   },
+  "definedFunctions": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "[\"",
+      {
+       "Fn::GetAtt": [
+        "function1351588B",
+        "Outputs.amplifyfishbowlfrontendprakasandbox1ca2d8565bfunctioncalendarReminderlambdaEEA1DABARef"
+       ]
+      },
+      "\"]"
+     ]
+    ]
+   }
+  },
   "storageRegion": {
    "Value": {
     "Ref": "AWS::Region"
@@ -237,7 +260,7 @@
       {
        "Ref": "AWS::Region"
       },
-      "\\\",\\\"paths\\\":{\\\"media/${cognito-identity.amazonaws.com:sub}/*\\\":{\\\"entityidentity\\\":[\\\"get\\\",\\\"list\\\",\\\"write\\\",\\\"delete\\\"]},\\\"media/*\\\":{\\\"authenticated\\\":[\\\"get\\\",\\\"list\\\"]}}}\"]"
+      "\\\",\\\"paths\\\":{\\\"media/${cognito-identity.amazonaws.com:sub}/*\\\":{\\\"entityidentity\\\":[\\\"get\\\",\\\"list\\\",\\\"write\\\",\\\"delete\\\"]},\\\"media/*\\\":{\\\"authenticated\\\":[\\\"get\\\",\\\"list\\\",\\\"write\\\",\\\"delete\\\"]},\\\"public/media/${cognito-identity.amazonaws.com:sub}/*\\\":{\\\"entityidentity\\\":[\\\"get\\\",\\\"list\\\",\\\"write\\\",\\\"delete\\\"]},\\\"public/media/*\\\":{\\\"authenticated\\\":[\\\"get\\\",\\\"list\\\",\\\"write\\\",\\\"delete\\\"]}}}\"]"
      ]
     ]
    }
@@ -341,7 +364,7 @@
        {
         "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
        },
-       "/27f79c0fa4bbc5085f6bf731ec3b7968447030cd79d227a0c0c8d225660cea83.json"
+       "/64a0835a7b369ddc9e3fd869f7174fbe925f311abc2849399bb4a91f23ff1d95.json"
       ]
      ]
     }
@@ -391,7 +414,7 @@
        {
         "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
        },
-       "/ac799e480abcd99b8c2d6d8b250b586fd6c3cdd79aa2420560c2da383a294cda.json"
+       "/8d8bb79f7e6f47b8410a308e95e4f5420b7fddfdd5383f58fd81e8758642e155.json"
       ]
      ]
     }
@@ -401,6 +424,48 @@
    "Metadata": {
     "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/storage.NestedStack/storage.NestedStackResource",
     "aws:asset:path": "amplifyfishbowlfrontendprakasandbox1ca2d8565bstorage952455E8.nested.template.json",
+    "aws:asset:property": "TemplateURL"
+   }
+  },
+  "function1351588B": {
+   "Type": "AWS::CloudFormation::Stack",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "amplify:deployment-type",
+      "Value": "sandbox"
+     },
+     {
+      "Key": "created-by",
+      "Value": "amplify"
+     }
+    ],
+    "TemplateURL": {
+     "Fn::Join": [
+      "",
+      [
+       "https://s3.",
+       {
+        "Ref": "AWS::Region"
+       },
+       ".",
+       {
+        "Ref": "AWS::URLSuffix"
+       },
+       "/",
+       {
+        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+       },
+       "/a48f6926b8a702499222a2795236db618bfa7942a544e3f4c21ef5ba715b752c.json"
+      ]
+     ]
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/function.NestedStack/function.NestedStackResource",
+    "aws:asset:path": "amplifyfishbowlfrontendprakasandbox1ca2d8565bfunction556E51AE.nested.template.json",
     "aws:asset:property": "TemplateURL"
    }
   },

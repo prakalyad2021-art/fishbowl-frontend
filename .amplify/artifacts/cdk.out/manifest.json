@@ -22,7 +22,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/a49ccb352ffa33a83c8421e9e904bc42983f7720981fb6ee63416d52de3244ae.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/4b767a26c0d4e8a7b5914f162eb0231951e63b86245b5b6af57eceb69340d9f6.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -6199,6 +6199,48 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "storage0EC3F24A"
+          }
+        ],
+        "/amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/function/calendarReminder-lambda/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "calendarReminderlambdaServiceRole97C3C30D"
+          }
+        ],
+        "/amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/function/calendarReminder-lambda/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "calendarReminderlambda6E9D726E"
+          }
+        ],
+        "/amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/function/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/function/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/function/amplifyfishbowlfrontendprakasandbox1ca2d8565bfunctioncalendarReminderlambdaEEA1DABARef": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyfishbowlfrontendprakasandbox1ca2d8565bfunctioncalendarReminderlambdaEEA1DABARef"
+          }
+        ],
+        "/amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/function.NestedStack/function.NestedStackResource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "function1351588B"
+          }
+        ],
+        "/amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/definedFunctions": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "definedFunctions"
           }
         ],
         "/amplify-fishbowlfrontend-praka-sandbox-1ca2d8565b/storageRegion": [

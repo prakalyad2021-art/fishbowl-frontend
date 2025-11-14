@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { getCurrentUser } from "aws-amplify/auth";
 import { client } from "../utils/dataClient";
-import { Heart, MessageCircle, Clock, Send } from "lucide-react";
+import { MessageCircle, Clock, Send } from "lucide-react";
 
 export default function Prompts({ user }) {
   const [prompt, setPrompt] = useState(null);
@@ -294,10 +294,6 @@ export default function Prompts({ user }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-                  <button className="flex items-center gap-2 text-gray-500 hover:text-red-500 transition">
-                    <Heart size={18} />
-                    <span className="text-sm">Like</span>
-                  </button>
                   <div className="flex items-center gap-2 text-gray-400 text-xs">
                     <Clock size={14} />
                     <span>Expires in {getTimeRemaining(r.expiresAt)}</span>

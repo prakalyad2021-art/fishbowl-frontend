@@ -31,7 +31,27 @@ export default function App() {
             <BottomNav />
             <div className="fixed top-4 right-4">
               <button
-                onClick={signOut}
+                onClick={async () => {
+                  // Set user offline before signing out
+                  try {
+                    const { getCurrentUser } = await import("aws-amplify/auth");
+                    const { client } = await import("./utils/dataClient");
+                    const authUser = await getCurrentUser();
+                    const existing = await client.models.User.list({
+                      filter: { userId: { eq: authUser.userId } },
+                    });
+                    if (existing.data.length > 0) {
+                      await client.models.User.update({
+                        id: existing.data[0].id,
+                        isOnline: false,
+                        lastSeen: new Date().toISOString(),
+                      });
+                    }
+                  } catch (error) {
+                    console.error("Error setting offline:", error);
+                  }
+                  signOut();
+                }}
                 className="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 text-sm"
               >
                 Sign Out

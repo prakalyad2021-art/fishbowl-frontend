@@ -85,14 +85,16 @@ export default function Fishbowl({ user }) {
       subscription = client.models.User.observeQuery().subscribe({
         next: (data) => {
           console.log("User subscription update:", data.items.length, "users");
-          // Get ALL online users - this is the key!
-          const online = data.items.filter((u) => u.isOnline === true);
+          // Get ALL users (online and offline)
+          const allUsersList = data.items;
+          // Get only online users for fish display
+          const online = allUsersList.filter((u) => u.isOnline === true);
           console.log("Online users:", online.map(u => ({ userId: u.userId, username: u.username, fishEmoji: u.fishEmoji })));
           
-          // Set online users directly from subscription (this ensures real-time sync)
-          setOnlineUsers(online);
+          // Set ALL users (for friends list showing online/offline)
+          setOnlineUsers(allUsersList);
           
-          // Update fish positions based on ALL online users
+          // Update fish positions based on ONLY online users (fish disappear when offline)
           const positions = online.map((user, i) => {
             // Reuse existing position if fish already exists (to prevent jumping)
             const existing = fishPositions.find(f => (f.userId === (user?.userId || user?.id)));
@@ -215,8 +217,13 @@ export default function Fishbowl({ user }) {
         isOnline: true,
       });
 
+      // Update local state to reflect mood change immediately
+      setUserMoods(prev => ({
+        ...prev,
+        [currentUser.id]: myMood
+      }));
+
       console.log("Mood updated successfully");
-      alert("Mood updated! 💭 Your thought bubble will appear above your fish!");
     } catch (error) {
       console.error("Error updating mood:", error);
       const errorMessage = error.message || error.toString() || "Unknown error";
@@ -246,9 +253,9 @@ export default function Fishbowl({ user }) {
     );
   }
 
-  // Get all users (active and inactive) for the friends list
-  const allUsers = [...onlineUsers];
-  const inactiveUsers = allUsers.filter((u) => !u.isOnline);
+  // Separate online and offline users for the friends list
+  const onlineFriends = onlineUsers.filter((u) => u.isOnline === true);
+  const offlineFriends = onlineUsers.filter((u) => u.isOnline === false || !u.isOnline);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#f5f5f5] text-gray-800 overflow-hidden p-6">
@@ -436,15 +443,15 @@ export default function Fishbowl({ user }) {
             }}
           >
             <h3 className="font-semibold text-blue-700 mb-3 text-center">
-              Active Friends ({onlineUsers.length})
+              Active Friends ({onlineFriends.length})
             </h3>
             <div className="flex flex-col gap-3">
-              {onlineUsers.length === 0 ? (
+              {onlineFriends.length === 0 ? (
                 <p className="text-gray-500 text-center text-sm">
                   No friends online yet. Invite them to join! 🐠
                 </p>
               ) : (
-                onlineUsers.map((friend) => {
+                onlineFriends.map((friend) => {
                   const friendId = friend.userId || friend.id;
                   return (
                     <div
@@ -453,7 +460,7 @@ export default function Fishbowl({ user }) {
                     >
                       <span className="text-2xl">{friend.fishEmoji || "🐠"}</span>
                       <div className="flex-1">
-                        <span className="font-medium">@{friend.username || "user"}</span>
+                        <span className="font-medium text-gray-900">@{friend.username || "user"}</span>
                         {(userMoods[friendId] || friend.mood) && (
                           <p className="text-xs text-gray-600">
                             {userMoods[friendId] || friend.mood}
@@ -465,20 +472,20 @@ export default function Fishbowl({ user }) {
                   );
                 })
               )}
-              {/* Show inactive friends (greyed out) */}
-              {inactiveUsers.length > 0 && (
+              {/* Show offline friends (greyed out) */}
+              {offlineFriends.length > 0 && (
                 <>
                   <div className="border-t border-gray-300 my-2"></div>
-                  <h4 className="text-xs text-gray-500 mb-2">Inactive</h4>
-                  {inactiveUsers.map((friend) => (
+                  <h4 className="text-xs text-gray-500 mb-2">Offline</h4>
+                  {offlineFriends.map((friend) => (
                     <div
-                      key={friend.id}
-                      className="flex items-center gap-3 p-2 rounded-xl filter grayscale opacity-40"
+                      key={friend.id || friend.userId}
+                      className="flex items-center gap-3 p-2 rounded-xl opacity-50"
                     >
-                      <span className="text-2xl">{friend.fishEmoji || "🐠"}</span>
-                      <span className="font-medium">@{friend.username}</span>
-                </div>
-              ))}
+                      <span className="text-2xl grayscale">{friend.fishEmoji || "🐠"}</span>
+                      <span className="font-medium text-gray-500">@{friend.username || "user"}</span>
+                    </div>
+                  ))}
                 </>
               )}
             </div>
