@@ -59,7 +59,13 @@ export default function Chatroom({ user }) {
     // Set up real-time subscription for messages
     const subscription = client.models.Message.observeQuery().subscribe({
       next: (data) => {
-        setMessages(data.items);
+        // Sort by createdAt timestamp to ensure proper ordering
+        const sorted = data.items.sort((a, b) => {
+          const timeA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+          const timeB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+          return timeA - timeB;
+        });
+        setMessages(sorted);
         // Auto-scroll to bottom
         setTimeout(() => {
           messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -75,7 +81,13 @@ export default function Chatroom({ user }) {
   const loadMessages = async () => {
     try {
       const msgs = await dataHelpers.getMessages();
-      setMessages(msgs);
+      // Sort by createdAt timestamp to ensure proper ordering
+      const sorted = msgs.sort((a, b) => {
+        const timeA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+        const timeB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+        return timeA - timeB;
+      });
+      setMessages(sorted);
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
@@ -152,7 +164,7 @@ export default function Chatroom({ user }) {
       });
       console.log("Message sent successfully");
 
-      setNewMessage("");
+    setNewMessage("");
       setMediaFile(null);
       setMediaPreview(null);
     } catch (error) {
@@ -216,7 +228,7 @@ export default function Chatroom({ user }) {
                 </div>
               )}
               {msg.content && <p className="text-sm">{msg.content}</p>}
-            </div>
+          </div>
           ))
         )}
         <div ref={messagesEndRef} />
@@ -282,7 +294,7 @@ export default function Chatroom({ user }) {
           ) : (
             <>
               <Send size={18} />
-              Send
+          Send
             </>
           )}
         </button>

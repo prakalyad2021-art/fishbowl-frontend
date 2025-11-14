@@ -4,7 +4,7 @@ import { client } from "../utils/dataClient";
 import { storageHelpers } from "../utils/storageClient";
 import { 
   Image, Video, Music, Link as LinkIcon, Trash2, MessageCircle, 
-  Send, X, Heart, Share2, MoreVertical, Upload, Plus
+  Send, X, Upload, Plus
 } from "lucide-react";
 
 const fishEmojis = ["🐠", "🐟", "🐡", "🦈", "🐙", "🐬"];
@@ -230,7 +230,7 @@ export default function Media({ user }) {
                 </button>
               </div>
 
-              <div className="p-6">
+    <div className="p-6">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -369,12 +369,9 @@ export default function Media({ user }) {
                   )}
                 </div>
 
-                {/* Actions Bar - Instagram Style */}
+                {/* Actions Bar - Comments Only */}
                 <div className="px-4 py-3 border-b border-gray-100">
                   <div className="flex items-center gap-4">
-                    <button className="hover:opacity-70 transition">
-                      <Heart size={24} className="text-gray-900" />
-                    </button>
                     <button
                       onClick={() =>
                         setShowComments({
@@ -385,9 +382,6 @@ export default function Media({ user }) {
                       className="hover:opacity-70 transition"
                     >
                       <MessageCircle size={24} className="text-gray-900" />
-                    </button>
-                    <button className="hover:opacity-70 transition">
-                      <Share2 size={24} className="text-gray-900" />
                     </button>
                   </div>
                 </div>
