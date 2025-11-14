@@ -30,6 +30,7 @@ export default function Prompts({ user }) {
       const today = new Date().toISOString().split("T")[0];
       console.log("Loading prompt for date:", today);
       
+      // First, try to get existing prompt
       const prompts = await client.models.Prompt.list({
         filter: { date: { eq: today } },
       });
@@ -61,24 +62,44 @@ export default function Prompts({ user }) {
           });
           console.log("Created new prompt:", newPrompt.data);
           setPrompt(newPrompt.data);
+          await loadResponses(newPrompt.data.id);
         } catch (createError) {
           console.error("Error creating prompt:", createError);
-          // If creation fails, show a default prompt
-          setPrompt({
-            id: 'default',
-            promptText: randomPrompt,
-            date: today,
+          console.error("Create error details:", createError.message, createError.errors);
+          // Try to get any recent prompt as fallback
+          const allPrompts = await client.models.Prompt.list({
+            sortDirection: 'DESC',
+            limit: 1,
           });
+          if (allPrompts.data.length > 0) {
+            console.log("Using most recent prompt as fallback:", allPrompts.data[0].promptText);
+            setPrompt(allPrompts.data[0]);
+            await loadResponses(allPrompts.data[0].id);
+          } else {
+            alert("Unable to load or create a prompt. Please try refreshing the page.");
+          }
         }
       }
     } catch (error) {
       console.error("Error loading prompt:", error);
-      // Show a default prompt if loading fails
-      setPrompt({
-        id: 'default',
-        promptText: "What's on your mind today? 💭",
-        date: new Date().toISOString().split("T")[0],
-      });
+      console.error("Error details:", error.message, error.errors);
+      // Try to get any recent prompt as fallback
+      try {
+        const allPrompts = await client.models.Prompt.list({
+          sortDirection: 'DESC',
+          limit: 1,
+        });
+        if (allPrompts.data.length > 0) {
+          console.log("Using most recent prompt as fallback:", allPrompts.data[0].promptText);
+          setPrompt(allPrompts.data[0]);
+          await loadResponses(allPrompts.data[0].id);
+        } else {
+          alert("Unable to load prompts. Please try refreshing the page.");
+        }
+      } catch (fallbackError) {
+        console.error("Fallback error:", fallbackError);
+        alert("Unable to load prompts. Please try refreshing the page.");
+      }
     }
   };
 

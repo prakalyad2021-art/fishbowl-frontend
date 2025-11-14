@@ -94,12 +94,17 @@ export default function Calendar({ user }) {
   const deleteEvent = async (eventId) => {
     if (!confirm("Delete this event?")) return;
     try {
-      await client.models.CalendarEvent.delete({ id: eventId });
+      console.log("Deleting event:", eventId);
+      const result = await client.models.CalendarEvent.delete({ id: eventId });
+      console.log("Delete result:", result);
       setShowEventDetails(false);
       setSelectedEvent(null);
       await loadEvents();
+      alert("Event deleted successfully");
     } catch (error) {
       console.error("Error deleting event:", error);
+      console.error("Error details:", error.message, error.errors);
+      alert(`Failed to delete event: ${error.message || "Unknown error"}`);
     }
   };
 

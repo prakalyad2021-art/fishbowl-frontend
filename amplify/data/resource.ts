@@ -55,7 +55,7 @@ const schema = a.schema({
       responses: a.hasMany('PromptResponse', 'promptId'),
     })
     .authorization((allow: any) => [
-      allow.authenticated().to(['read']),
+      allow.authenticated().to(['read', 'create']),
     ]),
 
   PromptResponse: a

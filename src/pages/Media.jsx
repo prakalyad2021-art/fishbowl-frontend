@@ -151,10 +151,15 @@ export default function Media({ user }) {
   const deletePost = async (postId) => {
     if (!confirm("Delete this post?")) return;
     try {
-      await client.models.MediaPost.delete({ id: postId });
+      console.log("Deleting post:", postId);
+      const result = await client.models.MediaPost.delete({ id: postId });
+      console.log("Delete result:", result);
       await loadPosts();
+      alert("Post deleted successfully");
     } catch (error) {
       console.error("Error deleting:", error);
+      console.error("Error details:", error.message, error.errors);
+      alert(`Failed to delete post: ${error.message || "Unknown error"}`);
     }
   };
 
