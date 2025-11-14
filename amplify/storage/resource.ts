@@ -11,14 +11,8 @@ export const storage = defineStorage({
       allow.entity('identity').to(['read', 'write', 'delete']),
       allow.authenticated.to(['read', 'write', 'delete']),
     ],
-    'media/*': [
-      allow.authenticated.to(['read', 'write', 'delete']),
-    ],
     'public/media/{entity_id}/*': [
       allow.entity('identity').to(['read', 'write', 'delete']),
-      allow.authenticated.to(['read', 'write', 'delete']),
-    ],
-    'public/media/*': [
       allow.authenticated.to(['read', 'write', 'delete']),
     ],
   }),
