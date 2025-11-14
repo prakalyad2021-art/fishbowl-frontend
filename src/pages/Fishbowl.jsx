@@ -7,7 +7,7 @@ import { client } from "../utils/dataClient";
 
 export default function Fishbowl({ user }) {
   const [fishPositions, setFishPositions] = useState([]);
-  const [myMood, setMyMood] = useState("(・∀・)");
+  const [myMood, setMyMood] = useState(""); // Empty by default - no default mood
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [userMoods, setUserMoods] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
@@ -42,10 +42,10 @@ export default function Fishbowl({ user }) {
 
         // Create or update user profile
         // Only update fishEmoji if it's a new user
+        // Don't set mood on initial load - only when user explicitly updates it
         const userDataToSave = {
           username,
           email,
-          mood: myMood,
           isOnline: true,
         };
         
@@ -64,7 +64,7 @@ export default function Fishbowl({ user }) {
         const latestUser = await client.models.User.list({
           filter: { userId: { eq: userId } },
         });
-        const userMood = latestUser.data.length > 0 ? latestUser.data[0].mood : myMood;
+        const userMood = latestUser.data.length > 0 ? (latestUser.data[0].mood || "") : "";
         
         setCurrentUser({ 
           id: userId, 
@@ -75,10 +75,9 @@ export default function Fishbowl({ user }) {
           mood: userMood // Include mood from User model
         });
         
-        // Update myMood state to match User model
-        if (userMood) {
-          setMyMood(userMood);
-        }
+        // Set input field to user's mood (if exists), but don't force it
+        // User can type freely until they click "Update Mood"
+        setMyMood(userMood || "");
         await loadData();
         setLoading(false);
       } catch (error) {
@@ -108,22 +107,25 @@ export default function Fishbowl({ user }) {
           setOnlineUsers(allUsersList);
           
           // Update fish positions based on ONLY online users (fish disappear when offline)
-          const positions = online.map((user, i) => {
-            // Reuse existing position if fish already exists (to prevent jumping)
-            const existing = fishPositions.find(f => (f.userId === (user?.userId || user?.id)));
-            // ALWAYS use User model's mood field (most recent) - this is the source of truth
-            const userMood = user?.mood || "(・∀・)";
-            return {
-              x: existing?.x || Math.random() * 80 + 10,
-              y: existing?.y || Math.random() * 60 + 20,
-              drift: existing?.drift || Math.random() * 2 - 1,
-              direction: existing?.direction || (Math.random() > 0.5 ? 1 : -1),
-              userId: user?.userId || user?.id,
-              username: user?.username,
-              fishEmoji: user?.fishEmoji || fishEmojis[i % fishEmojis.length], // Use stored fishEmoji
-              mood: userMood, // Use User model's mood field directly
-            };
-          });
+          // CRITICAL: Only show users where isOnline is STRICTLY true
+          const positions = online
+            .filter((u) => u.isOnline === true) // Double filter to be absolutely sure
+            .map((user, i) => {
+              // Reuse existing position if fish already exists (to prevent jumping)
+              const existing = fishPositions.find(f => (f.userId === (user?.userId || user?.id)));
+              // Use User model's mood field - only if it exists (no default)
+              const userMood = user?.mood || "";
+              return {
+                x: existing?.x || Math.random() * 80 + 10,
+                y: existing?.y || Math.random() * 60 + 20,
+                drift: existing?.drift || Math.random() * 2 - 1,
+                direction: existing?.direction || (Math.random() > 0.5 ? 1 : -1),
+                userId: user?.userId || user?.id,
+                username: user?.username,
+                fishEmoji: user?.fishEmoji || fishEmojis[i % fishEmojis.length], // Use stored fishEmoji
+                mood: userMood, // Use User model's mood field directly (empty if no mood set)
+              };
+            });
           setFishPositions(positions);
         },
         error: (err) => {
@@ -208,10 +210,11 @@ export default function Fishbowl({ user }) {
       alert("Please log in");
       return;
     }
-    if (!myMood.trim()) {
-      alert("Please enter a mood");
-      return;
-    }
+    // Allow empty mood to clear it
+    // if (!myMood.trim()) {
+    //   alert("Please enter a mood");
+    //   return;
+    // }
 
     try {
       console.log("Updating mood...", { userId: currentUser.id, mood: myMood });
@@ -224,13 +227,19 @@ export default function Fishbowl({ user }) {
         myMood
       );
 
-      // Update user's current mood in User model
+      // Update user's current mood in User model (can be empty to clear mood)
       await dataHelpers.createOrUpdateUser(currentUser.id, {
         username: currentUser.username,
         email: currentUser.email,
-        mood: myMood,
+        mood: myMood.trim() || null, // Set to null if empty to clear mood
         isOnline: true,
       });
+      
+      // Update currentUser state to reflect the new mood
+      setCurrentUser(prev => ({
+        ...prev,
+        mood: myMood.trim() || null
+      }));
 
       // Update local state to reflect mood change immediately
       setUserMoods(prev => ({
@@ -272,9 +281,9 @@ export default function Fishbowl({ user }) {
     );
   }
 
-  // Separate online and offline users for the friends list
+  // Separate online and offline users for the friends list - STRICT checks
   const onlineFriends = onlineUsers.filter((u) => u.isOnline === true);
-  const offlineFriends = onlineUsers.filter((u) => u.isOnline === false || !u.isOnline);
+  const offlineFriends = onlineUsers.filter((u) => u.isOnline === false || u.isOnline === null || u.isOnline === undefined);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#f5f5f5] text-gray-800 overflow-hidden p-6">
@@ -343,9 +352,8 @@ export default function Fishbowl({ user }) {
             fishPositions
               .filter((fish) => fish.userId) // Only show users with IDs
               .map((fish, i) => {
-                // ALWAYS use User model's mood field (from fish.mood) - this is the source of truth
-                // Don't use myMood state or userMoods for display - only use fish.mood from User model
-                const moodText = fish.mood || "(・∀・)";
+                // Only show thought bubble if mood exists (no default)
+                const moodText = fish.mood || "";
                 return (
                   <div
                     key={fish.userId || `fish-${i}`}
@@ -355,14 +363,16 @@ export default function Fishbowl({ user }) {
                 top: `${fish.y}%`,
               }}
             >
-                    {/* Thought bubble with mood */}
-                    <div className="mb-1 relative">
-                      <div className="px-3 py-1.5 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg border-2 border-blue-200 whitespace-nowrap">
-                        <span className="text-xs font-medium text-gray-800">💭 {moodText}</span>
+                    {/* Thought bubble with mood - ONLY show if mood exists */}
+                    {moodText && (
+                      <div className="mb-1 relative">
+                        <div className="px-3 py-1.5 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg border-2 border-blue-200 whitespace-nowrap">
+                          <span className="text-xs font-medium text-gray-800">💭 {moodText}</span>
+                        </div>
+                        {/* Bubble tail */}
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-white/90 border-r-2 border-b-2 border-blue-200 rotate-45"></div>
                       </div>
-                      {/* Bubble tail */}
-                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-white/90 border-r-2 border-b-2 border-blue-200 rotate-45"></div>
-                    </div>
+                    )}
               <span
                       className="text-5xl cursor-pointer hover:scale-110 transition-transform"
                       style={{ filter: "drop-shadow(0 0 8px rgba(255,255,150,0.9))" }}
@@ -376,8 +386,9 @@ export default function Fishbowl({ user }) {
                   </div>
                 );
               })
-          ) : currentUser && currentUser.fishEmoji ? (
-            // Show current user even if no other users - use User model mood, not myMood state
+          ) : currentUser && currentUser.fishEmoji && currentUser.isOnline !== false ? (
+            // Show current user even if no other users - only if online
+            // Only show thought bubble if mood exists
             <div
               className="absolute transition-all duration-500 ease-in-out flex flex-col items-center z-10"
               style={{
@@ -386,12 +397,14 @@ export default function Fishbowl({ user }) {
                 transform: "translate(-50%, -50%)",
               }}
             >
-              <div className="mb-1 relative">
-                <div className="px-3 py-1.5 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg border-2 border-blue-200 whitespace-nowrap">
-                  <span className="text-xs font-medium text-gray-800">💭 {currentUser.mood || myMood || "(・∀・)"}</span>
+              {currentUser.mood && (
+                <div className="mb-1 relative">
+                  <div className="px-3 py-1.5 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg border-2 border-blue-200 whitespace-nowrap">
+                    <span className="text-xs font-medium text-gray-800">💭 {currentUser.mood}</span>
+                  </div>
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-white/90 border-r-2 border-b-2 border-blue-200 rotate-45"></div>
                 </div>
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-white/90 border-r-2 border-b-2 border-blue-200 rotate-45"></div>
-              </div>
+              )}
               <span
                 className="text-5xl cursor-pointer hover:scale-110 transition-transform"
                 style={{ filter: "drop-shadow(0 0 8px rgba(255,255,150,0.9))" }}
@@ -430,7 +443,7 @@ export default function Fishbowl({ user }) {
             </h2>
             <input
               type="text"
-              placeholder="(・∀・)"
+              placeholder="Type your mood..."
               value={myMood}
               onChange={(e) => setMyMood(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleUpdateMood()}
@@ -472,42 +485,51 @@ export default function Fishbowl({ user }) {
                   No friends online yet. Invite them to join! 🐠
                 </p>
               ) : (
-                onlineFriends.map((friend) => {
-                  const friendId = friend.userId || friend.id;
-                  return (
-                    <div
-                      key={friendId || friend.id}
-                      className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/50 transition"
-                    >
-                      <span className="text-2xl">{friend.fishEmoji || "🐠"}</span>
-                      <div className="flex-1">
-                        <span className="font-medium text-gray-900">@{friend.username || "user"}</span>
-                        {/* Use User model's mood field first (most recent), then fallback to Mood table */}
-                        {(friend.mood || userMoods[friendId]) && (
-                          <p className="text-xs text-gray-600">
-                            {friend.mood || userMoods[friendId]}
-                          </p>
-                        )}
+                onlineFriends
+                  .filter((friend) => friend.isOnline === true) // STRICT check - only truly online
+                  .map((friend) => {
+                    const friendId = friend.userId || friend.id;
+                    return (
+                      <div
+                        key={friendId || friend.id}
+                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/50 transition"
+                      >
+                        <span className="text-2xl">{friend.fishEmoji || "🐠"}</span>
+                        <div className="flex-1">
+                          <span className="font-medium text-gray-900">@{friend.username || "user"}</span>
+                          {/* Use User model's mood field first (most recent), then fallback to Mood table */}
+                          {(friend.mood || userMoods[friendId]) && (
+                            <p className="text-xs text-gray-600">
+                              {friend.mood || userMoods[friendId]}
+                            </p>
+                          )}
+                        </div>
+                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                       </div>
-                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                    </div>
-                  );
-                })
+                    );
+                  })
               )}
-              {/* Show offline friends (greyed out) */}
-              {offlineFriends.length > 0 && (
+              {/* Show offline friends (greyed out) - STRICT check for offline */}
+              {offlineFriends
+                .filter((friend) => friend.isOnline === false || !friend.isOnline)
+                .length > 0 && (
                 <>
                   <div className="border-t border-gray-300 my-2"></div>
                   <h4 className="text-xs text-gray-500 mb-2">Offline</h4>
-                  {offlineFriends.map((friend) => (
-                    <div
-                      key={friend.id || friend.userId}
-                      className="flex items-center gap-3 p-2 rounded-xl opacity-50"
-                    >
-                      <span className="text-2xl grayscale">{friend.fishEmoji || "🐠"}</span>
-                      <span className="font-medium text-gray-500">@{friend.username || "user"}</span>
-                    </div>
-                  ))}
+                  {offlineFriends
+                    .filter((friend) => friend.isOnline === false || !friend.isOnline)
+                    .map((friend) => (
+                      <div
+                        key={friend.id || friend.userId}
+                        className="flex items-center gap-3 p-2 rounded-xl opacity-50 grayscale"
+                      >
+                        <span className="text-2xl grayscale">{friend.fishEmoji || "🐠"}</span>
+                        <div className="flex-1">
+                          <span className="font-medium text-gray-500">@{friend.username || "user"}</span>
+                        </div>
+                        {/* NO green dot for offline users */}
+                      </div>
+                    ))}
                 </>
               )}
             </div>
